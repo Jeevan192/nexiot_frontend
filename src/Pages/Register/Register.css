@@ -1,0 +1,217 @@
+/* ===== REGISTER PAGE ===== */
+.register-page { padding-bottom: 80px; }
+
+.register-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 48px;
+  align-items: start;
+  margin-top: 48px;
+}
+
+/* Form card */
+.register-form-card {
+  position: relative;
+}
+
+.register-form-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--pink));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.register-form-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.register-form-sub {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  margin-bottom: 28px;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-error {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--pink);
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+.submit-btn {
+  padding: 14px;
+  font-size: 0.85rem;
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.05), transparent);
+  transform: translateX(-100%);
+  transition: 0.6s ease;
+}
+
+.submit-btn:hover::after { transform: translateX(100%); }
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Skills chips input */
+.skills-input-container { position: relative; }
+
+.skills-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(0,245,255,0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  min-height: 48px;
+  cursor: text;
+  transition: var(--transition);
+}
+
+.skills-chips:focus-within {
+  border-color: rgba(0,245,255,0.5);
+  background: rgba(0,245,255,0.05);
+}
+
+.skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: rgba(0,245,255,0.1);
+  border: 1px solid rgba(0,245,255,0.2);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--cyan);
+}
+
+.skill-chip-remove {
+  cursor: pointer;
+  color: var(--cyan-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  transition: var(--transition);
+  background: none;
+  border: none;
+  outline: none;
+  padding: 0;
+}
+
+.skill-chip-remove:hover { color: var(--pink); }
+
+.skills-input {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  min-width: 100px;
+  flex: 1;
+  padding: 4px;
+}
+
+.skills-input::placeholder { color: rgba(200,220,255,0.3); }
+
+.skills-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* Sidebar info */
+.register-sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+.register-info-card { padding: 24px !important; }
+
+.register-info-card h4 {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  letter-spacing: 0.08em;
+}
+
+.info-steps { display: flex; flex-direction: column; gap: 12px; }
+
+.info-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.info-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,245,255,0.1);
+  border: 1px solid rgba(0,245,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.register-perks { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+
+.perk-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.perk-item svg { color: var(--green); flex-shrink: 0; }
+
+@media (max-width: 900px) {
+  .register-layout { grid-template-columns: 1fr; }
+  .register-sidebar { order: -1; }
+}
+
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+}
