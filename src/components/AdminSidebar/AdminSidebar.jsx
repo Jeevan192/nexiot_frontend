@@ -28,10 +28,9 @@ export default function AdminSidebar({ collapsed }) {
     <aside className={`admin-sidebar${collapsed ? ' collapsed' : ''}`}>
       <div className="admin-sidebar-header">
         <div className="admin-brand">
-          <div className="admin-brand-icon">IoT</div>
-          {!collapsed && <span className="admin-brand-name">NEXT-IoT</span>}
+          <img src="/final-logo-transparent.png" alt="Logo" className={`admin-logo-image ${collapsed ? 'collapsed' : ''}`} />
         </div>
-        {!collapsed && <p className="admin-brand-sub">Admin Panel</p>}
+        {!collapsed && <p className="admin-brand-sub" style={{ marginTop: '0.4rem' }}>Admin Panel</p>}
       </div>
 
       <nav className="admin-nav">

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { FiGithub, FiInstagram, FiLinkedin, FiTwitter, FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
+import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Footer.css'
 
 export default function Footer() {
@@ -11,8 +12,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="footer-brand-logo">
-              <div className="footer-brand-icon">IoT</div>
-              <span className="footer-brand-name">NEXT<span>-IoT</span></span>
+              <img src="/final-logo-transparent.png" alt="NEX-IOT Logo" className="footer-logo-image" />
             </div>
             <p className="footer-tagline">
               Build the Future with IoT — A student-led tech club at CBIT, Hyderabad, driving innovation in embedded systems and connected devices.
@@ -32,7 +32,7 @@ export default function Footer() {
               <li><Link to="/">Home</Link></li>
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/events">Events</Link></li>
-              <li><Link to="/register">Join Club</Link></li>
+              <li><Link to="/register">{CLUB_CONFIG.registrationsOpen ? 'Join Club' : 'Registrations Closed'}</Link></li>
               <li><Link to="/contact">Contact</Link></li>
             </ul>
           </div>
@@ -41,10 +41,10 @@ export default function Footer() {
           <div className="footer-section">
             <h4>Resources</h4>
             <ul className="footer-links">
-              <li><a href="#">Projects Gallery</a></li>
-              <li><a href="#">Workshop Materials</a></li>
-              <li><a href="#">IoT Documentation</a></li>
-              <li><a href="#">Blog</a></li>
+              <li><Link to="/events">Projects Gallery</Link></li>
+              <li><Link to="/events">Workshop Materials</Link></li>
+              <li><Link to="/about">Club Documentation</Link></li>
+              <li><Link to="/contact">Blog & Updates</Link></li>
               <li><Link to="/admin">Admin Portal</Link></li>
             </ul>
           </div>
@@ -66,7 +66,7 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © 2025 <span>Next-IoT Club</span> · CBIT, Hyderabad. All rights reserved.
+            © 2025 <span>NEX-IOT Club</span> · CBIT, Hyderabad. All rights reserved.
           </p>
           <p className="footer-made">
             Organized by <span>Ms. N. Sujata Gupta</span>

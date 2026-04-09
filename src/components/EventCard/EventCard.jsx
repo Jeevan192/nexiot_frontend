@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiCalendar, FiMapPin, FiUsers, FiClock, FiArrowRight } from 'react-icons/fi'
+import { CLUB_CONFIG } from '../../config/clubConfig.js'
 
 const statusConfig = {
   upcoming: { label: 'Upcoming', cls: 'badge-cyan' },
@@ -12,6 +13,7 @@ const statusConfig = {
 export default function EventCard({ event, onRegister }) {
   const navigate = useNavigate()
   const status = statusConfig[event.status] || statusConfig.upcoming
+  const canRegister = CLUB_CONFIG.registrationsOpen && event.status !== 'closed' && event.status !== 'completed'
 
   const handleRegister = () => {
     if (onRegister) onRegister(event)
@@ -22,7 +24,7 @@ export default function EventCard({ event, onRegister }) {
     <div className="event-card glass-card">
       <div className="event-card-header">
         <div className="event-card-tag">{event.category || 'Workshop'}</div>
-        <span className={`badge ${status.cls}`}>{status.label}</span>
+        <span className={`badge ${status.cls}`} aria-label={`Status ${status.label}`}>{status.label}</span>
       </div>
 
       <div className="event-card-icon">{event.icon || '⚡'}</div>
@@ -32,19 +34,19 @@ export default function EventCard({ event, onRegister }) {
 
       <div className="event-card-meta">
         <div className="meta-item">
-          <FiCalendar />
+          <FiCalendar aria-hidden="true" />
           <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </div>
         <div className="meta-item">
-          <FiClock />
+          <FiClock aria-hidden="true" />
           <span>{event.time || '10:00 AM'}</span>
         </div>
         <div className="meta-item">
-          <FiMapPin />
+          <FiMapPin aria-hidden="true" />
           <span>{event.venue || 'CBIT Seminar Hall'}</span>
         </div>
         <div className="meta-item">
-          <FiUsers />
+          <FiUsers aria-hidden="true" />
           <span>{event.registered || 0} / {event.capacity || 100} seats</span>
         </div>
       </div>
@@ -57,13 +59,13 @@ export default function EventCard({ event, onRegister }) {
       )}
 
       <div className="event-card-footer">
-        {event.status !== 'closed' && event.status !== 'completed' ? (
-          <button className="btn btn-primary" onClick={handleRegister}>
+        {canRegister ? (
+          <button className="btn btn-primary" onClick={handleRegister} aria-label={`Register for ${event.title}`}>
             Register Now <FiArrowRight />
           </button>
         ) : (
           <button className="btn btn-secondary" disabled>
-            {event.status === 'completed' ? 'Event Over' : 'Registration Closed'}
+            {event.status === 'completed' ? 'Event Over' : 'Registrations Closed'}
           </button>
         )}
       </div>

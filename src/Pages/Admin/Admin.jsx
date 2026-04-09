@@ -49,12 +49,13 @@ function AdminLogin() {
         <div className="admin-login-header">
           <div className="admin-login-icon">IoT</div>
           <h2>Admin Portal</h2>
-          <p>// NEXT-IOT · CBIT · SECURE ACCESS</p>
+          <p>// NEX-IOT · CBIT · SECURE ACCESS</p>
         </div>
         <form className="admin-login-form" onSubmit={handleLogin} noValidate>
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label" htmlFor="admin-username">Username</label>
             <input
+              id="admin-username"
               className="form-input"
               value={form.username}
               onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
@@ -63,9 +64,10 @@ function AdminLogin() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label" htmlFor="admin-password">Password</label>
             <div style={{ position: 'relative' }}>
               <input
+                id="admin-password"
                 className="form-input"
                 type={showPw ? 'text' : 'password'}
                 value={form.password}
@@ -77,6 +79,7 @@ function AdminLogin() {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
+                aria-label={showPw ? 'Hide password' : 'Show password'}
                 style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex' }}
               >
                 {showPw ? <FiEyeOff /> : <FiEye />}
@@ -124,7 +127,7 @@ function Dashboard() {
     { label: 'Total Members', value: stats.totalMembers, icon: <FiUsers />, change: '+12%', accent: 'var(--cyan)', iconBg: 'rgba(0,245,255,0.08)', iconColor: 'var(--cyan)', iconBorder: 'rgba(0,245,255,0.15)' },
     { label: 'Pending Approvals', value: stats.pendingApprovals, icon: <FiCheckSquare />, change: 'Today', accent: 'var(--gold)', iconBg: 'rgba(255,215,0,0.08)', iconColor: 'var(--gold)', iconBorder: 'rgba(255,215,0,0.15)' },
     { label: 'Upcoming Events', value: stats.upcomingEvents, icon: <FiCalendar />, change: 'Active', accent: 'var(--green)', iconBg: 'rgba(0,255,136,0.08)', iconColor: 'var(--green)', iconBorder: 'rgba(0,255,136,0.15)' },
-    { label: 'This Month Reg.', value: stats.thisMonthReg, icon: <FiBarChart2 />, change: '+8%', accent: 'var(--pink)', iconBg: 'rgba(255,51,102,0.08)', iconColor: 'var(--pink)', iconBorder: 'rgba(255,51,102,0.15)' },
+    { label: 'This Month Reg.', value: stats.thisMonthReg, icon: <FiBarChart2 />, change: '+8%', accent: 'var(--pink)', iconBg: 'rgba(102,191,255,0.1)', iconColor: 'var(--pink)', iconBorder: 'rgba(102,191,255,0.2)' },
   ]
 
   return (
@@ -134,7 +137,7 @@ function Dashboard() {
           Welcome back{user?.name ? `, ${user.name}` : ''}!
         </h2>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-secondary)', letterSpacing: '0.1em' }}>
-          // NEXT-IOT ADMIN DASHBOARD · {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          // NEX-IOT ADMIN DASHBOARD · {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
@@ -201,10 +204,9 @@ const MOCK_REGS = [
 function Registrations() {
   const [regs, setRegs] = useState(MOCK_REGS)
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
     getRegistrations()
       .then(res => setRegs(res.data))
       .catch(() => setRegs(MOCK_REGS))
@@ -325,30 +327,45 @@ function Registrations() {
 // ===========================
 const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', icon: '⚡' }
 
-const MOCK_ADMIN_EVENTS = [
-  { id: 1, title: 'IoT Bootcamp 2025', category: 'Workshop', status: 'open', date: '2025-08-15', venue: 'Lab 302', capacity: 60, registered: 45 },
-  { id: 2, title: 'Hack-IoT Hackathon', category: 'Hackathon', status: 'upcoming', date: '2025-09-20', venue: 'Seminar Hall', capacity: 100, registered: 28 },
-]
+const MOCK_ADMIN_EVENTS = []
 
 function EventsManagement() {
-  const [events, setEvents] = useState(MOCK_ADMIN_EVENTS)
+  const [events, setEvents] = useState([])
   const [showModal, setShowModal] = useState(false)
   const [editEvent, setEditEvent] = useState(null)
   const [form, setForm] = useState(EMPTY_EVENT)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const closeModal = () => { setShowModal(false); setEditEvent(null); setForm(EMPTY_EVENT) }
 
   useEffect(() => {
-    setLoading(true)
-    getEvents().then(res => setEvents(res.data)).catch(() => setEvents(MOCK_ADMIN_EVENTS)).finally(() => setLoading(false))
+    const onlyClubEvents = (items) => items.filter((item) => {
+      const source = `${item?.club || item?.organizer || item?.source || ''}`.toLowerCase()
+      return source.includes('nex-iot') || source.includes('nexiot') || (source.includes('nex') && source.includes('iot'))
+    })
+
+    getEvents()
+      .then(res => setEvents(onlyClubEvents(res.data || [])))
+      .catch(() => setEvents(MOCK_ADMIN_EVENTS))
+      .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!showModal) return
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') closeModal()
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [showModal])
 
   const openModal = (event = null) => {
     setEditEvent(event)
     setForm(event ? { ...event } : EMPTY_EVENT)
     setShowModal(true)
   }
-
-  const closeModal = () => { setShowModal(false); setEditEvent(null); setForm(EMPTY_EVENT) }
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -364,20 +381,21 @@ function EventsManagement() {
         toast.success('Event created!')
       }
       closeModal()
-    } catch {
-      if (editEvent) {
-        setEvents(ev => ev.map(x => x.id === editEvent.id ? { ...x, ...form } : x))
-      } else {
-        setEvents(ev => [...ev, { ...form, id: Date.now(), registered: 0 }])
-      }
-      toast.success(editEvent ? 'Event updated!' : 'Event created!')
-      closeModal()
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Unable to save event. Please try again.'
+      toast.error(msg)
     }
   }
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this event?')) return
-    try { await deleteEvent(id) } catch {}
+    try {
+      await deleteEvent(id)
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Unable to delete event. Please try again.'
+      toast.error(msg)
+      return
+    }
     setEvents(ev => ev.filter(x => x.id !== id))
     toast.success('Event deleted')
   }

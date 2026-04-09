@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar/Navbar.jsx'
 import Footer from './components/Footer/Footer.jsx'
 import Loader from './components/Loader/Loader.jsx'
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx'
 import Home from './Pages/Home/Home.jsx'
 import About from './Pages/About/About.jsx'
 import Events from './Pages/Events/Events.jsx'
@@ -11,25 +12,26 @@ import Register from './Pages/Register/Register.jsx'
 import Success from './Pages/Success/Success.jsx'
 import Contact from './Pages/Contact/Contact.jsx'
 import Admin from './Pages/Admin/Admin.jsx'
-import { getToken } from './services/authService.js'
-
-function ProtectedRoute({ children }) {
-  const token = getToken()
-  return token ? children : <Navigate to="/admin" replace />
-}
 
 export default function App() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => sessionStorage.getItem('nextiot_loader_seen') !== '1')
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2200)
+    if (!loading) return
+
+    const timer = setTimeout(() => {
+      setLoading(false)
+      sessionStorage.setItem('nextiot_loader_seen', '1')
+    }, 1600)
+
     return () => clearTimeout(timer)
-  }, [])
+  }, [loading])
 
   if (loading) return <Loader />
 
   return (
-    <>
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -42,7 +44,7 @@ export default function App() {
             letterSpacing: '0.05em',
           },
           success: { iconTheme: { primary: '#00f5ff', secondary: '#000' } },
-          error: { iconTheme: { primary: '#ff3366', secondary: '#000' } },
+          error: { iconTheme: { primary: '#66bfff', secondary: '#000' } },
         }}
       />
       <Routes>
@@ -50,9 +52,9 @@ export default function App() {
         <Route
           path="/*"
           element={
-            <>
+            <ErrorBoundary>
               <Navbar />
-              <main>
+              <main id="main-content" tabIndex="-1">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/about" element={<About />} />
@@ -64,10 +66,10 @@ export default function App() {
                 </Routes>
               </main>
               <Footer />
-            </>
+            </ErrorBoundary>
           }
         />
       </Routes>
-    </>
+    </div>
   )
 }

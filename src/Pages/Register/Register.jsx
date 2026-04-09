@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FiCheckCircle, FiArrowRight, FiX } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { submitRegistration } from '../../services/eventService.js'
+import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Register.css'
 
 const BRANCHES = ['CSE', 'ECE', 'EEE', 'IT', 'MECH', 'CIVIL', 'CHEM', 'Other']
@@ -47,7 +48,7 @@ export default function Register() {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   const addSkill = (e) => {
-    if ((e.key === 'Enter' || e.key === ',') && skillInput.trim()) {
+    if (e.key === 'Enter' && skillInput.trim()) {
       e.preventDefault()
       const val = skillInput.trim().replace(/,$/, '')
       if (val && !skills.includes(val)) setSkills(s => [...s, val])
@@ -59,6 +60,10 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!CLUB_CONFIG.registrationsOpen) {
+      toast.error(CLUB_CONFIG.registrationNotice)
+      return
+    }
     const errs = validate(form)
     if (Object.keys(errs).length) { setErrors(errs); toast.error('Please fix the errors.'); return }
     setErrors({})
@@ -66,8 +71,10 @@ export default function Register() {
     try {
       const payload = { ...form, skills, eventId: state?.eventId || null }
       const res = await submitRegistration(payload)
+      const successPayload = { regId: res.data?.id, name: form.fullName, email: form.email }
+      sessionStorage.setItem('nextiot_last_registration', JSON.stringify(successPayload))
       toast.success('Registration submitted! Check your email.')
-      navigate('/success', { state: { regId: res.data?.id, name: form.fullName, email: form.email } })
+      navigate('/success', { state: successPayload })
     } catch (err) {
       const msg = err.response?.data?.message || 'Submission failed. Please try again.'
       toast.error(msg)
@@ -76,13 +83,43 @@ export default function Register() {
     }
   }
 
+  if (!CLUB_CONFIG.registrationsOpen) {
+    return (
+      <div className="register-page">
+        <div className="page-hero">
+          <div className="page-hero-bg" />
+          <div className="container">
+            <span className="badge badge-cyan">Membership Intake Closed</span>
+            <h1 className="page-hero-title">NEX-IOT <span>Registrations</span></h1>
+            <p className="page-hero-sub">{CLUB_CONFIG.registrationNotice}</p>
+          </div>
+        </div>
+
+        <div className="container">
+          <div className="register-layout" style={{ gridTemplateColumns: '1fr' }}>
+            <div className="register-form-card glass-card" style={{ textAlign: 'center' }}>
+              <h2 className="register-form-title">Admissions Temporarily Closed</h2>
+              <p className="register-form-sub">// NEX-IOT · CBIT · INTAKE PAUSED</p>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>
+                The next membership window will be announced through the Events page and official club channels.
+              </p>
+              <button type="button" className="btn btn-primary" onClick={() => navigate('/events')}>
+                Browse Events <FiArrowRight />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="register-page">
       <div className="page-hero">
         <div className="page-hero-bg" />
         <div className="container">
           <span className="badge badge-cyan">Membership Registration</span>
-          <h1 className="page-hero-title">Join <span>Next-IoT</span></h1>
+          <h1 className="page-hero-title">Join <span>NEX-IOT</span></h1>
           <p className="page-hero-sub">Fill in your details below. Applications are reviewed within 48 hours.</p>
         </div>
       </div>
@@ -92,34 +129,34 @@ export default function Register() {
           {/* Form */}
           <div className="register-form-card glass-card">
             <h2 className="register-form-title">Registration Form</h2>
-            <p className="register-form-sub">// NEXT-IOT · CBIT · 2025 COHORT</p>
+            <p className="register-form-sub">// NEX-IOT · CBIT · 2025 COHORT</p>
 
             <form className="register-form" onSubmit={handleSubmit} noValidate>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Full Name *</label>
-                  <input className="form-input" value={form.fullName} onChange={set('fullName')} placeholder="Your full name" />
+                  <label className="form-label" htmlFor="reg-fullname">Full Name *</label>
+                  <input id="reg-fullname" className="form-input" value={form.fullName} onChange={set('fullName')} placeholder="Your full name" required />
                   {errors.fullName && <span className="form-error">{errors.fullName}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Roll Number *</label>
-                  <input className="form-input" value={form.rollNumber} onChange={set('rollNumber')} placeholder="e.g. 22B01A0501" />
+                  <label className="form-label" htmlFor="reg-roll">Roll Number *</label>
+                  <input id="reg-roll" className="form-input" value={form.rollNumber} onChange={set('rollNumber')} placeholder="e.g. 22B01A0501" required />
                   {errors.rollNumber && <span className="form-error">{errors.rollNumber}</span>}
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Branch *</label>
-                  <select className="form-input" value={form.branch} onChange={set('branch')}>
+                  <label className="form-label" htmlFor="reg-branch">Branch *</label>
+                  <select id="reg-branch" className="form-input" value={form.branch} onChange={set('branch')} required>
                     <option value="">Select branch</option>
                     {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
                   </select>
                   {errors.branch && <span className="form-error">{errors.branch}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Year *</label>
-                  <select className="form-input" value={form.year} onChange={set('year')}>
+                  <label className="form-label" htmlFor="reg-year">Year *</label>
+                  <select id="reg-year" className="form-input" value={form.year} onChange={set('year')} required>
                     <option value="">Select year</option>
                     {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
@@ -129,19 +166,19 @@ export default function Register() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="your@email.com" />
+                  <label className="form-label" htmlFor="reg-email">Email *</label>
+                  <input id="reg-email" className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="your@email.com" required />
                   {errors.email && <span className="form-error">{errors.email}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Phone Number *</label>
-                  <input className="form-input" type="tel" value={form.phone} onChange={set('phone')} placeholder="10-digit number" maxLength={10} />
+                  <label className="form-label" htmlFor="reg-phone">Phone Number *</label>
+                  <input id="reg-phone" className="form-input" type="tel" value={form.phone} onChange={set('phone')} placeholder="10-digit number" maxLength={10} required />
                   {errors.phone && <span className="form-error">{errors.phone}</span>}
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Skills (press Enter or comma to add)</label>
+                <label className="form-label" htmlFor="reg-skills">Skills (press Enter to add)</label>
                 <div className="skills-chips" onClick={() => skillInputRef.current?.focus()}>
                   {skills.map(s => (
                     <span className="skill-chip" key={s}>
@@ -150,6 +187,7 @@ export default function Register() {
                     </span>
                   ))}
                   <input
+                    id="reg-skills"
                     ref={skillInputRef}
                     className="skills-input"
                     value={skillInput}
@@ -162,13 +200,15 @@ export default function Register() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Why do you want to join Next-IoT? *</label>
+                <label className="form-label" htmlFor="reg-why-join">Why do you want to join NEX-IOT? *</label>
                 <textarea
+                  id="reg-why-join"
                   className="form-input"
                   value={form.whyJoin}
                   onChange={set('whyJoin')}
                   placeholder="Tell us about your interest in IoT and what you hope to build..."
                   rows={4}
+                  required
                 />
                 {errors.whyJoin && <span className="form-error">{errors.whyJoin}</span>}
                 <p className="skills-hint">{form.whyJoin.length} / min. 20 characters</p>

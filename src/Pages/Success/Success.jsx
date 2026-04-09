@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { FiCheckCircle, FiHome, FiCalendar, FiMail } from 'react-icons/fi'
 import './Success.css'
@@ -6,12 +6,20 @@ import './Success.css'
 export default function Success() {
   const { state } = useLocation()
   const navigate = useNavigate()
+  const fallbackState = useMemo(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem('nextiot_last_registration') || 'null')
+    } catch {
+      return null
+    }
+  }, [])
+  const pageState = state || fallbackState
 
   useEffect(() => {
-    if (!state?.name) navigate('/')
-  }, [])
+    if (!pageState?.name) navigate('/register')
+  }, [navigate, pageState])
 
-  if (!state?.name) return null
+  if (!pageState?.name) return null
 
   return (
     <div className="success-page">
@@ -33,20 +41,20 @@ export default function Success() {
 
           <span className="badge badge-green" style={{ margin: '0 auto 16px' }}>Application Submitted</span>
 
-          <h1 className="success-title">Welcome, <span>{state.name.split(' ')[0]}!</span></h1>
+          <h1 className="success-title">Welcome, <span>{pageState.name.split(' ')[0]}!</span></h1>
           <p className="success-sub">
-            Your application to join Next-IoT has been received. Our team will review it within 48 hours.
+            Your application to join NEX-IOT has been received. Our team will review it within 48 hours.
           </p>
 
           <div className="success-info">
             <div className="success-info-item">
               <FiMail />
-              <span>Confirmation sent to <strong>{state.email}</strong></span>
+              <span>Confirmation sent to <strong>{pageState.email}</strong></span>
             </div>
-            {state.regId && (
+            {pageState.regId && (
               <div className="success-info-item">
                 <FiCheckCircle />
-                <span>Registration ID: <strong style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>#{state.regId}</strong></span>
+                <span>Registration ID: <strong style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)' }}>#{pageState.regId}</strong></span>
               </div>
             )}
           </div>
@@ -54,7 +62,7 @@ export default function Success() {
           <div className="success-steps">
             <h4>Your QR Code</h4>
             <div className="success-qr-placeholder">
-              <div className="qr-mock">
+              <div className="qr-mock" role="img" aria-label="QR code sent to email">
                 <div className="qr-corner qr-tl" />
                 <div className="qr-corner qr-tr" />
                 <div className="qr-corner qr-bl" />

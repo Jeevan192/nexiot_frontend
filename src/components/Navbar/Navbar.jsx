@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { FiMenu, FiX, FiZap, FiHome, FiInfo, FiCalendar, FiMail, FiUserPlus } from 'react-icons/fi'
+import { FiHome, FiInfo, FiCalendar, FiMail, FiUserPlus } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Navbar.css'
 
 const navItems = [
@@ -15,6 +17,14 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const navigate = useNavigate()
 
+  const handleRegisterClick = () => {
+    if (!CLUB_CONFIG.registrationsOpen) {
+      toast.error(CLUB_CONFIG.registrationNotice)
+      return
+    }
+    navigate('/register')
+  }
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -28,11 +38,14 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`navbar${scrolled ? ' scrolled' : ''}`}>
+      <nav className={`navbar${scrolled ? ' scrolled' : ''}`} aria-label="Main navigation">
         <div className="navbar-inner">
           <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
-            <div className="nav-logo-icon">IoT</div>
-            <span className="nav-logo-text">NEXT<span>-IoT</span></span>
+            <img 
+              src="/final-logo-transparent.png" 
+              alt="NEX-IOT Logo" 
+              className="nav-logo-image" 
+            />
           </Link>
 
           <ul className="nav-links">
@@ -50,8 +63,8 @@ export default function Navbar() {
           </ul>
 
           <div className="nav-cta">
-            <button className="btn btn-primary nav-register-btn" onClick={() => navigate('/register')}>
-              <FiUserPlus /> Register
+            <button className="btn btn-primary nav-register-btn" onClick={handleRegisterClick}>
+              <FiUserPlus /> {CLUB_CONFIG.registrationsOpen ? 'Register' : 'Registrations Closed'}
             </button>
           </div>
 
@@ -59,13 +72,15 @@ export default function Navbar() {
             className={`nav-hamburger${menuOpen ? ' open' : ''}`}
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
           >
             <span /><span /><span />
           </button>
         </div>
       </nav>
 
-      <div className={`nav-mobile${menuOpen ? ' open' : ''}`}>
+      <div id="mobile-nav" className={`nav-mobile${menuOpen ? ' open' : ''}`}>
         <ul>
           {navItems.map(({ path, label, icon }) => (
             <li key={path}>
@@ -83,9 +98,9 @@ export default function Navbar() {
         <div className="nav-mobile-cta">
           <button
             className="btn btn-primary"
-            onClick={() => { navigate('/register'); setMenuOpen(false) }}
+            onClick={() => { handleRegisterClick(); setMenuOpen(false) }}
           >
-            <FiUserPlus /> Join Next-IoT
+            <FiUserPlus /> {CLUB_CONFIG.registrationsOpen ? 'Join NEX-IOT' : 'Registrations Closed'}
           </button>
         </div>
       </div>

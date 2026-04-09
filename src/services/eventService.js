@@ -13,9 +13,15 @@ export const getRegistrationById = (id) => api.get(`/registrations/${id}`)
 export const approveRegistration = (id) => api.put(`/registrations/${id}/approve`)
 export const deleteRegistration = (id) => api.delete(`/registrations/${id}`)
 export const exportRegistrations = (format = 'csv') =>
-  api.get(`/registrations/export?format=${format}`, { responseType: 'blob' })
+  api.get('/registrations/export', {
+    params: { format },
+    responseType: 'blob',
+  })
 
 export const markAttendance = (qrCode) => api.post('/attendance/scan', { qrCode })
-export const getAttendance = (eventId) => api.get(`/attendance${eventId ? `?eventId=${eventId}` : ''}`)
+export const getAttendance = (eventId) =>
+  api.get('/attendance', {
+    params: eventId ? { eventId } : undefined,
+  })
 
 export const getDashboardStats = () => api.get('/admin/stats')

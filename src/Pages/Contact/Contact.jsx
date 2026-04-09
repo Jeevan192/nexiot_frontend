@@ -18,10 +18,9 @@ export default function Contact() {
       await api.post('/contact', form)
       toast.success('Message sent! We\'ll respond within 24 hours.')
       setForm({ name: '', email: '', subject: '', message: '' })
-    } catch {
-      // Simulate success for demo
-      toast.success('Message sent! We\'ll respond within 24 hours.')
-      setForm({ name: '', email: '', subject: '', message: '' })
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Unable to send message right now. Please try again.'
+      toast.error(msg)
     } finally {
       setSending(false)
     }
@@ -34,7 +33,7 @@ export default function Contact() {
         <div className="container">
           <span className="badge badge-cyan">Get in Touch</span>
           <h1 className="page-hero-title">Contact <span>Us</span></h1>
-          <p className="page-hero-sub">Have a question about Next-IoT? Want to collaborate or sponsor? We'd love to hear from you.</p>
+          <p className="page-hero-sub">Have a question about NEX-IOT? Want to collaborate or sponsor? We'd love to hear from you.</p>
         </div>
       </div>
 
@@ -65,7 +64,7 @@ export default function Contact() {
                 <div className="contact-item-icon"><FiPhone /></div>
                 <div>
                   <p className="contact-item-label">Phone</p>
-                  <a href="tel:+ 99630 28231" className="contact-item-value"> 99630 28231</a>
+                  <a href="tel:+919963028231" className="contact-item-value">+91 99630 28231</a>
                 </div>
               </div>
 
@@ -102,23 +101,23 @@ export default function Contact() {
             <form className="contact-form" onSubmit={handleSubmit} noValidate>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Name *</label>
-                  <input className="form-input" value={form.name} onChange={set('name')} placeholder="Your name" />
+                  <label className="form-label" htmlFor="contact-name">Name *</label>
+                  <input id="contact-name" className="form-input" value={form.name} onChange={set('name')} placeholder="Your name" required />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email *</label>
-                  <input className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="your@email.com" />
+                  <label className="form-label" htmlFor="contact-email">Email *</label>
+                  <input id="contact-email" className="form-input" type="email" value={form.email} onChange={set('email')} placeholder="your@email.com" required />
                 </div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Subject</label>
-                <input className="form-input" value={form.subject} onChange={set('subject')} placeholder="What's this about?" />
+                <label className="form-label" htmlFor="contact-subject">Subject</label>
+                <input id="contact-subject" className="form-input" value={form.subject} onChange={set('subject')} placeholder="What's this about?" />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Message *</label>
-                <textarea className="form-input" value={form.message} onChange={set('message')} placeholder="Your message..." rows={5} />
+                <label className="form-label" htmlFor="contact-message">Message *</label>
+                <textarea id="contact-message" className="form-input" value={form.message} onChange={set('message')} placeholder="Your message..." rows={5} required />
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px' }} disabled={sending}>
