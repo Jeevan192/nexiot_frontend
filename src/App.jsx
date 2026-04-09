@@ -31,6 +31,12 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <div className="global-bg">
+        <div className="global-bg-grid" />
+        <div className="global-bg-scan" />
+        <div className="global-bg-particles" />
+      </div>
+
       <a className="skip-link" href="#main-content">Skip to content</a>
       <Toaster
         position="top-right"

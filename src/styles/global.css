@@ -500,3 +500,12 @@ textarea.form-input {
     scroll-behavior: auto !important;
   }
 }
+
+ /* GLOBAL CYBER BACKGROUND */ 
+.global-bg { position: fixed; inset: 0; z-index: -10; overflow: hidden; background: var(--ink); pointer-events: none; }
+ .global-bg-grid { position: absolute; bottom: -20%; left: -50%; width: 200%; height: 100%; background-image: linear-gradient(rgba(31, 142, 235, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(31, 142, 235, 0.08) 1px, transparent 1px); background-size: 60px 60px; transform: perspective(800px) rotateX(75deg); transform-origin: top center; opacity: 0.8; mask-image: radial-gradient(ellipse at 50% 10%, black 10%, transparent 60%); -webkit-mask-image: radial-gradient(ellipse at 50% 10%, black 10%, transparent 60%); animation: gridFlow 15s linear infinite; }
+ @keyframes gridFlow { 0% { transform: perspective(800px) rotateX(75deg) translateY(0px); } 100% { transform: perspective(800px) rotateX(75deg) translateY(60px); } }
+ .global-bg-scan { position: absolute; width: 100%; height: 120%; top: -100%; background: linear-gradient(to bottom, transparent 95%, rgba(42, 240, 224, 0.3) 98%, rgba(31, 142, 235, 0.8) 100%); animation: radarScan 8s ease-in-out infinite alternate; opacity: 0.15; }
+ @keyframes radarScan { 0% { transform: translateY(0); } 100% { transform: translateY(200%); } }
+ .global-bg-particles { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(126, 215, 255, 0.15) 1px, transparent 2px); background-size: 40px 40px; animation: snowDrift 30s linear infinite; mask-image: linear-gradient(to bottom, black 20%, transparent 80%); -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 80%); }
+ @keyframes snowDrift { 0% { background-position: 0 0; } 100% { background-position: 0 -400px; } }
