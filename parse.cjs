@@ -1,0 +1,1 @@
+const fs = require('fs'); const { PDFParse } = require('pdf-parse'); const dataBuffer = fs.readFileSync('CET-WORKSHOPS-FDPS-EVENTS-17.12.2024-.pdf'); PDFParse(dataBuffer).then(data => fs.writeFileSync('pdf_extracted.txt', data.text)).catch(console.error);

@@ -35,10 +35,14 @@ const team = [
 ]
 
 const timeline = [
-  { year: '2022', title: 'Club Founded', desc: 'NEX-IOT was established with 30 founding members and a mission to democratize IoT education at CBIT.' },
-  { year: '2023', title: 'First Hackathon', desc: 'Hosted CBIT\'s first IoT hackathon with 120+ participants. 3 projects went on to receive startup funding.' },
-  { year: '2024', title: '200 Members', desc: 'Crossed 200 active members. Launched Industry Mentor Program with 12 IoT professionals.' },
-  { year: '2025', title: 'Lab Inauguration', desc: 'Dedicated IoT lab inaugurated with ESP32 kits, oscilloscopes, and Raspberry Pi clusters.' },
+  { year: '2024', title: 'Club Inception & Proposal', desc: 'NEX-IOT was proposed by students and faculty of the CET Department to explore the vast potential of the Internet of Things.' },
+  { year: '2024', title: 'Inauguration & Fusion Expo', desc: 'Officially launched on Nov 12, 2024, featuring industry speakers and an exhibition of 17 diverse student IoT projects.' }
+]
+
+const previousTeam = [
+  { name: 'MD Raheesh Arman', role: 'Student Coordinator', dept: 'CET', avatar: 'RA' },
+  { name: 'B Praneeth', role: 'Student Coordinator', dept: 'CET', avatar: 'BP' },
+  { name: 'G Rami Reddy', role: 'Student Coordinator', dept: 'CET', avatar: 'RR' }
 ]
 
 export default function About() {
@@ -133,6 +137,22 @@ export default function About() {
                 </div>
               );
             })}
+
+            <div className="team-department-wrapper" style={{ marginBottom: '3rem', marginTop: '4rem' }}>
+              <h3 className="department-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--gray-300)', borderBottom: '1px solid var(--line)', paddingBottom: '0.5rem' }}>
+                Founding Student Coordinators (2024)
+              </h3>
+              <div className="team-grid opacity-75">
+                {previousTeam.map((member, i) => (
+                  <div className="team-card glass-card" key={i} style={{ border: '1px dashed var(--line)' }}>
+                    <div className="team-avatar" style={{ background: 'var(--card-bg)' }}>{member.avatar}</div>
+                    <h4 className="team-name">{member.name}</h4>
+                    <p className="team-role">{member.role}</p>
+                    <span className="badge badge-outline">{member.dept}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>

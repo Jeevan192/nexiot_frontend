@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useScroll, useTransform, animate, useInView } from 'framer-motion'
 import Tilt from 'react-parallax-tilt'
 import { FiArrowRight, FiGlobe, FiSearch, FiLayers, FiCpu, FiMap, FiBookOpen, FiHelpCircle, FiActivity, FiCommand, FiRadio } from 'react-icons/fi'
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Home.css'
 
@@ -133,10 +135,10 @@ const impactSignals = [
 const trustedBy = ['CBIT CSE', 'CBIT ECE', 'CBIT IT', 'Student Innovation Cell', 'Faculty Mentors', 'Industry Alumni']
 
 const proofStats = [
-  { value: '200+', label: 'Active Members' },
-  { value: '30+', label: 'Built Projects' },
-  { value: '12+', label: 'Mentors & Advisors' },
-  { value: '15+', label: 'Events Annually' },
+  { value: '300+', label: 'Active Participants' },
+  { value: '17+', label: 'Built Projects' },
+  { value: '10+', label: 'Mentors & Advisors' },
+  { value: '1', label: 'Fusion Expo Conducted' },
 ]
 
 const missionModes = [
@@ -189,6 +191,15 @@ const blueprintPhases = [
 export default function Home() {
   const navigate = useNavigate()
   const [activeMode, setActiveMode] = useState(missionModes[0].id)
+  const [init, setInit] = useState(false)
+
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadSlim(engine);
+    }).then(() => {
+      setInit(true);
+    });
+  }, []);
 
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
@@ -263,6 +274,38 @@ export default function Home() {
     [activeMode]
   )
 
+  const particlesOptions = useMemo(() => ({
+    background: { color: { value: "transparent" } },
+    fpsLimit: 120,
+    interactivity: {
+      events: {
+        onClick: { enable: true, mode: "push" },
+        onHover: { enable: true, mode: "grab" },
+      },
+      modes: {
+        push: { quantity: 4 },
+        grab: { distance: 150, links: { opacity: 0.8, color: '#00f5ff' } },
+      },
+    },
+    particles: {
+      color: { value: "#00f5ff" },
+      links: { color: "#00f5ff", distance: 150, enable: true, opacity: 0.2, width: 1 },
+      move: {
+        direction: "none",
+        enable: true,
+        outModes: { default: "bounce" },
+        random: false,
+        speed: 1.2,
+        straight: false,
+      },
+      number: { density: { enable: true }, value: 80 },
+      opacity: { value: 0.4 },
+      shape: { type: "circle" },
+      size: { value: { min: 1, max: 2.5 } },
+    },
+    detectRetina: true,
+  }), []);
+
   const goRegister = () => {
     if (CLUB_CONFIG.registrationsOpen) navigate('/register')
   }
@@ -282,6 +325,18 @@ export default function Home() {
           `,
         }}
       />
+      
+      {/* IoT GLOBAL NODE NETWORK BACKGROUND */}
+      {init && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, overflow: 'hidden' }}>
+           <Particles
+              id="tsparticles"
+              options={particlesOptions}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+            />
+        </div>
+      )}
+
       {/* ===== HERO ===== */}
       <section className="hero">
         <motion.div className="hero-bg" style={{ y: heroY }} />
@@ -545,18 +600,6 @@ export default function Home() {
           </div>
         </div>
       </motion.section>
-
-      {/* ===== TECH STRIP ===== */}
-      <div className="tech-strip">
-        <div className="tech-strip-inner">
-          {[...techStack, ...techStack].map((tech, i) => (
-            <div className="tech-chip" key={i}>
-              <div className="dot" />
-              {tech}
-            </div>
-          ))}
-        </div>
-      </div>
 
       <motion.section 
         className="platform-section"

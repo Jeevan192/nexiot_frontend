@@ -1,0 +1,1 @@
+import { exportImages } from 'pdf-export-images'; exportImages('CET-WORKSHOPS-FDPS-EVENTS-17.12.2024-.pdf', 'public/pdf-images').then(images => console.log('Exported', images.length, 'images')).catch(console.error);

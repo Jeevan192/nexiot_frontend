@@ -40,13 +40,14 @@ export default function Navbar() {
     <>
       <nav className={`navbar${scrolled ? ' scrolled' : ''}`} aria-label="Main navigation">
         <div className="navbar-inner">
-          <Link to="/" className="nav-logo" onClick={() => setMenuOpen(false)}>
+          <div className="nav-logo" style={{ cursor: 'pointer' }} onClick={() => { setMenuOpen(false); navigate('/'); }} onDoubleClick={() => navigate('/admin')}>
             <img 
               src="/final-logo-transparent.png" 
               alt="NEX-IOT Logo" 
               className="nav-logo-image" 
+              title="Double click for secret admin access"
             />
-          </Link>
+          </div>
 
           <ul className="nav-links">
             {navItems.map(({ path, label, icon }) => (

@@ -1,0 +1,1 @@
+import fs from 'fs'; import * as pdfModule from 'pdf-parse'; const pdf = pdfModule.default || pdfModule; const path = 'CET-WORKSHOPS-FDPS-EVENTS-17.12.2024-.pdf'; const dataBuffer = fs.readFileSync(path); pdf(dataBuffer).then(data => fs.writeFileSync('pdf_extracted.txt', data.text)).catch(console.error);
