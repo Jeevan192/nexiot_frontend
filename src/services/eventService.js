@@ -16,9 +16,36 @@ const saveDB = (key, data) => {
 
 // Seed initial authentic data from the PDF if empty
 const initialEvents = [
-  { id: 1, title: 'NEX-IOT Club Inauguration', date: '2024-10-15', location: 'CBIT Assembly Hall', description: 'The official launch of the NEX-IOT Club, featuring poster unveiling and guest speeches.', status: 'completed' },
-  { id: 2, title: 'Fusion Expo 2024', date: '2024-11-20', location: 'Main Campus Grid', description: 'Showcasing 17+ innovative IoT hardware projects built by our very own members.', status: 'completed' },
-  { id: 3, title: 'Hardware Demonstrations', date: '2025-01-10', location: 'IoT Lab, Block C', description: 'Hands-on demonstrations and technical review sessions for sensor integrations.', status: 'upcoming' },
+  { 
+    id: 1, 
+    title: 'NeXIoT Club Inauguration', 
+    description: 'The official launch of NeXIoT Club at CBIT. An event dedicated to fostering innovation, learning, and collaboration in IoT and emerging tech.', 
+    category: 'Talk', 
+    status: 'completed', 
+    date: '2024-11-12T10:00:00Z', 
+    time: '10:00 AM - 12:00 PM', 
+    venue: 'Assembly Hall, CBIT, Hyderabad', 
+    registered: 250, 
+    capacity: 250, 
+    club: 'NEX-IOT', 
+    icon: '🚀', 
+    image: '/pdf-images/img_p4_1.png' 
+  },
+  { 
+    id: 2, 
+    title: 'Fusion Expo', 
+    description: 'An exhibition showcasing 17 diverse IoT projects built by student teams tackling real-world challenges, followed by a Q&A and networking session.', 
+    category: 'Project Sprint', 
+    status: 'completed', 
+    date: '2024-11-12T13:00:00Z', 
+    time: '1:00 PM - 3:00 PM', 
+    venue: 'Seminar Hall, R&E Block, CBIT', 
+    registered: 250, 
+    capacity: 250, 
+    club: 'NEX-IOT', 
+    icon: '⚡', 
+    image: '/pdf-images/img_p5_1.png' 
+  }
 ];
 
 const initialRegistrations = [
@@ -27,43 +54,48 @@ const initialRegistrations = [
   { id: 103, name: 'Kavya Reddy', email: 'kavya.r@example.com', rollNo: '160122733012', branch: 'IT', year: '2', status: 'pending', date: '2024-09-15' },
 ];
 
-if (!localStorage.getItem('nexiot_events')) saveDB('events', initialEvents);
-if (!localStorage.getItem('nexiot_registrations')) saveDB('registrations', initialRegistrations);
+if (!localStorage.getItem('nexiot_events_v2')) {
+  saveDB('events_v2', initialEvents);
+  saveDB('registrations_v2', initialRegistrations);
+  // Optional: clear old ones
+  localStorage.removeItem('nexiot_events');
+  localStorage.removeItem('nexiot_registrations');
+}
 
 export const getEvents = async () => {
   await delay();
-  return { data: getDB('events') };
+  return { data: getDB('events_v2') };
 };
 
 export const getEventById = async (id) => {
   await delay();
-  const event = getDB('events').find(e => e.id === Number(id));
+  const event = getDB('events_v2').find(e => e.id === Number(id));
   return { data: event };
 };
 
 export const createEvent = async (data) => {
   await delay();
-  const events = getDB('events');
+  const events = getDB('events_v2');
   const newEvent = { ...data, id: Date.now() };
-  saveDB('events', [...events, newEvent]);
+  saveDB('events_v2', [...events, newEvent]);
   return { data: newEvent };
 };
 
 export const updateEvent = async (id, data) => {
   await delay();
-  const events = getDB('events');
+  const events = getDB('events_v2');
   const index = events.findIndex(e => e.id === Number(id));
   if (index > -1) {
     events[index] = { ...events[index], ...data };
-    saveDB('events', events);
+    saveDB('events_v2', events);
   }
   return { data: events[index] };
 };
 
 export const deleteEvent = async (id) => {
   await delay();
-  const events = getDB('events').filter(e => e.id !== Number(id));
-  saveDB('events', events);
+  const events = getDB('events_v2').filter(e => e.id !== Number(id));
+  saveDB('events_v2', events);
   return { data: { success: true } };
 };
 
@@ -74,38 +106,38 @@ export const getEventParticipants = async (id) => {
 
 export const submitRegistration = async (data) => {
   await delay();
-  const regs = getDB('registrations');
+  const regs = getDB('registrations_v2');
   const newReg = { ...data, id: Date.now(), status: 'pending', date: new Date().toISOString() };
-  saveDB('registrations', [...regs, newReg]);
+  saveDB('registrations_v2', [...regs, newReg]);
   return { data: newReg };
 };
 
 export const getRegistrations = async (params = {}) => {
   await delay();
-  return { data: getDB('registrations') };
+  return { data: getDB('registrations_v2') };
 };
 
 export const getRegistrationById = async (id) => {
   await delay();
-  const reg = getDB('registrations').find(e => e.id === Number(id));
+  const reg = getDB('registrations_v2').find(e => e.id === Number(id));
   return { data: reg };
 };
 
 export const approveRegistration = async (id) => {
   await delay();
-  const regs = getDB('registrations');
+  const regs = getDB('registrations_v2');
   const index = regs.findIndex(e => e.id === Number(id));
   if (index > -1) {
     regs[index].status = 'approved';
-    saveDB('registrations', regs);
+    saveDB('registrations_v2', regs);
   }
   return { data: regs[index] };
 };
 
 export const deleteRegistration = async (id) => {
   await delay();
-  const regs = getDB('registrations').filter(e => e.id !== Number(id));
-  saveDB('registrations', regs);
+  const regs = getDB('registrations_v2').filter(e => e.id !== Number(id));
+  saveDB('registrations_v2', regs);
   return { data: { success: true } };
 };
 
@@ -128,8 +160,8 @@ export const getAttendance = async (eventId) => {
 
 export const getDashboardStats = async () => {
   await delay();
-  const events = getDB('events');
-  const regs = getDB('registrations');
+  const events = getDB('events_v2');
+  const regs = getDB('registrations_v2');
   return {
     data: {
       totalMembers: regs.filter(r => r.status === 'approved').length,

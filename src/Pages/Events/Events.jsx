@@ -49,16 +49,18 @@ export default function Events() {
   const [activeStatus, setActiveStatus] = useState('All')
 
   useEffect(() => {
-    const onlyClubEvents = (items) => items.filter((item) => {
-      const source = `${item?.club || item?.organizer || item?.source || ''}`.toLowerCase()
-      return source.includes('nex-iot') || source.includes('nexiot') || (source.includes('nex') && source.includes('iot'))
-    })
-
+    // In our local mock, all events are club events
     getEvents()
-      .then(res => setEvents(onlyClubEvents(res.data || [])))
+      .then(res => {
+        // If the mock db is empty or undefined, fallback to MOCK_EVENTS
+        if (!res.data || res.data.length === 0) {
+          setEvents(MOCK_EVENTS)
+        } else {
+          setEvents(res.data)
+        }
+      })
       .catch(() => {
         setEvents(MOCK_EVENTS)
-        toast('No club-verified events are published yet.')
       })
       .finally(() => setLoading(false))
   }, [])
@@ -144,7 +146,7 @@ export default function Events() {
             <div className="gallery-track">
               {/* Double array so it seamlessly loops in CSS */}
               {[
-                { img: '/pdf-images/img_p10_1.png', title: 'Fusin Expo Inaugaral' },
+                { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugaral' },
                 { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
                 { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
                 { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
