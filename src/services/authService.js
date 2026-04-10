@@ -9,11 +9,20 @@ const clearAuthStorage = () => {
 }
 
 export const login = async (credentials) => {
-  const response = await api.post('/auth/login', credentials)
-  const { token, user } = response.data
-  localStorage.setItem(TOKEN_KEY, token)
-  localStorage.setItem(USER_KEY, JSON.stringify(user))
-  return { token, user }
+  // Bypassing real backend and using local mock auth
+  if (credentials.username === 'admin' && credentials.password === 'nexiot2024') {
+    const mockToken = 'mock_jwt_token_for_admin_portal'
+    const mockUser = { id: 1, username: 'admin', role: 'admin' }
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    localStorage.setItem(TOKEN_KEY, mockToken)
+    localStorage.setItem(USER_KEY, JSON.stringify(mockUser))
+    return { token: mockToken, user: mockUser }
+  } else {
+    throw { response: { data: { message: 'Invalid credentials. Only admin access allowed.' } } }
+  }
 }
 
 export const logout = () => {

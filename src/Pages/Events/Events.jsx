@@ -192,12 +192,17 @@ export default function Events() {
                 gap: 20px;
                 width: max-content;
                 animation: autoScroll 35s linear infinite;
+                will-change: transform;
               }
               .gallery-track:hover {
                 animation-play-state: paused;
               }
+              .gallery-item {
+                transform: translateZ(0); 
+                will-change: transform, border-color, box-shadow;
+              }
               .gallery-item:hover {
-                transform: translateY(-8px) scale(1.02);
+                transform: translateY(-8px) scale(1.02) translateZ(0);
                 border-color: var(--cyan) !important;
                 z-index: 10;
                 box-shadow: 0 10px 30px rgba(0, 245, 255, 0.15);
@@ -206,8 +211,8 @@ export default function Events() {
                 opacity: 1 !important;
               }
               @keyframes autoScroll {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(calc(-50% - 10px)); } /* Scrolls exactly half the flex width */
+                0% { transform: translateX(0) translateZ(0); }
+                100% { transform: translateX(calc(-50% - 10px)) translateZ(0); } /* Scrolls exactly half the flex width */
               }
             `}} />
           </div>

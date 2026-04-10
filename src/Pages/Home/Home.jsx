@@ -274,37 +274,41 @@ export default function Home() {
     [activeMode]
   )
 
-  const particlesOptions = useMemo(() => ({
-    background: { color: { value: "transparent" } },
-    fpsLimit: 120,
-    interactivity: {
-      events: {
-        onClick: { enable: true, mode: "push" },
-        onHover: { enable: true, mode: "grab" },
+  const particlesOptions = useMemo(() => {
+    // Detect mobile for performance optimization
+    const isMobile = window.innerWidth <= 768;
+    return {
+      background: { color: { value: "transparent" } },
+      fpsLimit: isMobile ? 60 : 120,
+      interactivity: {
+        events: {
+          onClick: { enable: true, mode: "push" },
+          onHover: { enable: true, mode: "grab" },
+        },
+        modes: {
+          push: { quantity: isMobile ? 2 : 4 },
+          grab: { distance: isMobile ? 100 : 150, links: { opacity: 0.8, color: '#00f5ff' } },
+        },
       },
-      modes: {
-        push: { quantity: 4 },
-        grab: { distance: 150, links: { opacity: 0.8, color: '#00f5ff' } },
+      particles: {
+        color: { value: "#00f5ff" },
+        links: { color: "#00f5ff", distance: isMobile ? 100 : 150, enable: true, opacity: 0.2, width: 1 },
+        move: {
+          direction: "none",
+          enable: true,
+          outModes: { default: "bounce" },
+          random: false,
+          speed: isMobile ? 0.8 : 1.2,
+          straight: false,
+        },
+        number: { density: { enable: true }, value: isMobile ? 40 : 80 },
+        opacity: { value: 0.4 },
+        shape: { type: "circle" },
+        size: { value: { min: 1, max: 2.5 } },
       },
-    },
-    particles: {
-      color: { value: "#00f5ff" },
-      links: { color: "#00f5ff", distance: 150, enable: true, opacity: 0.2, width: 1 },
-      move: {
-        direction: "none",
-        enable: true,
-        outModes: { default: "bounce" },
-        random: false,
-        speed: 1.2,
-        straight: false,
-      },
-      number: { density: { enable: true }, value: 80 },
-      opacity: { value: 0.4 },
-      shape: { type: "circle" },
-      size: { value: { min: 1, max: 2.5 } },
-    },
-    detectRetina: true,
-  }), []);
+      detectRetina: true,
+    };
+  }, []);
 
   const goRegister = () => {
     if (CLUB_CONFIG.registrationsOpen) navigate('/register')
@@ -323,6 +327,7 @@ export default function Home() {
               transparent 80%
             )
           `,
+          willChange: 'background'
         }}
       />
       
