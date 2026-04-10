@@ -45,7 +45,6 @@ export default function Footer() {
               <li><Link to="/events">Workshop Materials</Link></li>
               <li><Link to="/about">Club Documentation</Link></li>
               <li><Link to="/contact">Blog & Updates</Link></li>
-              <li><Link to="/admin">Admin Portal</Link></li>
             </ul>
           </div>
 
