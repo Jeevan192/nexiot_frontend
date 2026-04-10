@@ -185,6 +185,23 @@
 
 .topbar-toggle:hover { color: var(--cyan); border-color: rgba(0,245,255,0.3); }
 
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none !important;
+}
+
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 150;
+  display: none;
+}
+
 .admin-topbar-right {
   display: flex;
   align-items: center;
@@ -611,7 +628,10 @@
 }
 
 @media (max-width: 768px) {
-  .admin-sidebar { transform: translateX(-100%); }
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+  .admin-sidebar-overlay { display: block; }
+  .admin-sidebar { transform: translateX(-100%); width: 240px; }
   .admin-sidebar.mobile-open { transform: translateX(0); }
   .admin-main { margin-left: 0 !important; }
   .stats-grid { grid-template-columns: 1fr 1fr; }

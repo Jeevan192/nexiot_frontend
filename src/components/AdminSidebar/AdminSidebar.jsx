@@ -15,7 +15,7 @@ const adminNav = [
   { path: '/admin/analytics', label: 'Analytics', icon: <FiBarChart2 /> },
 ]
 
-export default function AdminSidebar({ collapsed }) {
+export default function AdminSidebar({ collapsed, mobileOpen }) {
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -25,7 +25,7 @@ export default function AdminSidebar({ collapsed }) {
   }
 
   return (
-    <aside className={`admin-sidebar${collapsed ? ' collapsed' : ''}`}>
+    <aside className={`admin-sidebar${collapsed ? ' collapsed' : ''}${mobileOpen ? ' mobile-open' : ''}`}>
       <div className="admin-sidebar-header">
         <div className="admin-brand">
           <img src="/final-logo-transparent.png" alt="Logo" className={`admin-logo-image ${collapsed ? 'collapsed' : ''}`} />

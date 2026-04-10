@@ -618,6 +618,7 @@ function Attendance() {
 // ===========================
 function AdminProtected() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const user = getUser()
 
   const pageLabels = {
@@ -631,16 +632,27 @@ function AdminProtected() {
   const location = useLocation()
   const pageTitle = pageLabels[location.pathname] || 'Admin'
 
+  // Close mobile sidebar automatically on navigation
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
+
   if (!isAuthenticated()) return <Navigate to="/admin" replace />
 
   return (
     <div className="admin-layout">
-      <AdminSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      {mobileOpen && <div className="admin-sidebar-overlay" onClick={() => setMobileOpen(false)} />}
+      <AdminSidebar collapsed={collapsed} mobileOpen={mobileOpen} setCollapsed={setCollapsed} />
       <div className={`admin-main${collapsed ? ' collapsed' : ''}`}>
         <div className="admin-topbar">
           <div className="admin-topbar-left">
-            <button className="topbar-toggle" onClick={() => setCollapsed(!collapsed)}>
+            {/* Desktop Toggle */}
+            <button className="topbar-toggle desktop-only" onClick={() => setCollapsed(!collapsed)}>
               {collapsed ? <FiMenu /> : <FiX />}
+            </button>
+            {/* Mobile Toggle */}
+            <button className="topbar-toggle mobile-only" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <FiX /> : <FiMenu />}
             </button>
             <h2>{pageTitle}</h2>
           </div>

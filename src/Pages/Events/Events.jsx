@@ -153,7 +153,7 @@ export default function Events() {
                 { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
                 { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' },
                 // Duplicate for infinite scroll
-                { img: '/pdf-images/img_p10_1.png', title: 'Project Exhibition' },
+                { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugaral' },
                 { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
                 { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
                 { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
