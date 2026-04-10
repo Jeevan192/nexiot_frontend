@@ -45,8 +45,14 @@ function AdminLogin() {
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
         <div className="hero-grid" style={{ position: 'absolute', inset: 0 }} />
       </div>
-      <div className="admin-login-card glass-card" style={{ zIndex: 1 }}>
-        <div className="admin-login-header">
+      <div className="admin-login-card glass-card" style={{ zIndex: 1, position: 'relative' }}>
+        <button 
+          onClick={() => navigate('/')} 
+          style={{ position: 'absolute', top: 20, left: 20, background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.05em', zIndex: 10, padding: '5px' }}
+        >
+          <FiX size={18} /> Return to Site
+        </button>
+        <div className="admin-login-header" style={{ marginTop: 20 }}>
           <div className="admin-login-icon">IoT</div>
           <h2>Admin Portal</h2>
           <p>// NEX-IOT · CBIT · SECURE ACCESS</p>

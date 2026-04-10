@@ -21,7 +21,7 @@ export default function AdminSidebar({ collapsed, mobileOpen }) {
   const handleLogout = () => {
     logout()
     toast.success('Logged out successfully')
-    navigate('/admin')
+    navigate('/')
   }
 
   return (
