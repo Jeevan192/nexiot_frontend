@@ -20,7 +20,7 @@ const MOCK_EVENTS = [
     capacity: 250,
     club: 'NEX-IOT',
     icon: '🚀',
-    image: '/pdf-images/img_p5_1.png'
+    image: '/pdf-images/img_p4_1.png'
   },
   {
     id: 'ev-2',
@@ -144,15 +144,15 @@ export default function Events() {
             <div className="gallery-track">
               {/* Double array so it seamlessly loops in CSS */}
               {[
-                { img: '/pdf-images/img_p10_1.png', title: 'Project Exhibition' },
-                { img: '/pdf-images/img_p11_1.png', title: 'Team Presentations' },
+                { img: '/pdf-images/img_p10_1.png', title: 'Fusin Expo Inaugaral' },
+                { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
                 { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
                 { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
                 { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
                 { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' },
                 // Duplicate for infinite scroll
                 { img: '/pdf-images/img_p10_1.png', title: 'Project Exhibition' },
-                { img: '/pdf-images/img_p11_1.png', title: 'Team Presentations' },
+                { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
                 { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
                 { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
                 { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
