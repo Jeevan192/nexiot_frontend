@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar/Navbar.jsx'
 import Footer from './components/Footer/Footer.jsx'
@@ -12,6 +12,14 @@ import Register from './Pages/Register/Register.jsx'
 import Success from './Pages/Success/Success.jsx'
 import Contact from './Pages/Contact/Contact.jsx'
 import Admin from './Pages/Admin/Admin.jsx'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+  return null
+}
 
 export default function App() {
   const [loading, setLoading] = useState(() => sessionStorage.getItem('nextiot_loader_seen') !== '1')
@@ -31,6 +39,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <ScrollToTop />
       <div className="global-bg">
         <div className="global-bg-grid" />
         <div className="global-bg-scan" />
