@@ -562,9 +562,6 @@ textarea.form-input {
 
   .glass-card {
     padding: 22px;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
 
   .section-subtitle {
     margin-bottom: 38px;
@@ -576,9 +573,6 @@ textarea.form-input {
   }
 
   .app-ambient,
-  .global-bg,
-  .global-bg-grid,
-  .global-bg-scan,
   .global-bg-particles {
     display: none;
   }
@@ -587,16 +581,8 @@ textarea.form-input {
   .animate-fadeInUp,
   .aurora-text,
   .page-hero-bg {
-    animation: none !important;
-  }
-
-  .btn,
-  .glass-card,
-  .filter-btn,
-  .nav-links a,
-  .nav-mobile a,
-  .route-shell {
-    transition: none;
+    /* Keep animations but make them very fast and non-intensive if you want, 
+       or just don't touch them so we don't break opacity: 0 states. */
   }
 
   .route-page {
@@ -609,11 +595,7 @@ textarea.form-input {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .route-page,
-  .route-fallback {
-    animation: none !important;
-  }
-
+  /* Do not remove animations randomly from route-page since fallback needs them to become visible if opacity is defined in keyframes */
   .route-transition-overlay {
     display: none;
   }

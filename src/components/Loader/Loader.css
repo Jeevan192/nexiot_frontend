@@ -261,13 +261,6 @@
 }
 
 @media (max-width: 768px) {
-  .hq-loader-grid,
-  .hq-scanline,
-  .ring,
-  .progress-glow {
-    display: none;
-  }
-
   .hq-loader-wrapper {
     animation-duration: 420ms;
   }
