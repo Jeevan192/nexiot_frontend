@@ -81,7 +81,7 @@ export default function Navbar() {
               src="/final-logo-transparent.png" 
               alt="NEX-IOT Logo" 
               className="nav-logo-image" 
-              title="Double click for secret admin access"
+              title="Nex-Iot Logo"
             />
           </div>
 
