@@ -8,13 +8,39 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx'
 import { getConfig } from './services/eventService.js'
 import { CLUB_CONFIG } from './config/clubConfig.js'
 
-const Home = lazy(() => import('./Pages/Home/Home.jsx'))
-const About = lazy(() => import('./Pages/About/About.jsx'))
-const Events = lazy(() => import('./Pages/Events/Events.jsx'))
-const Register = lazy(() => import('./Pages/Register/Register.jsx'))
-const Success = lazy(() => import('./Pages/Success/Success.jsx'))
-const Contact = lazy(() => import('./Pages/Contact/Contact.jsx'))
-const Admin = lazy(() => import('./Pages/Admin/Admin.jsx'))
+const LAZY_RELOAD_KEY = 'nextiot_lazy_chunk_reload_attempted'
+
+function lazyWithReload(importer) {
+  return lazy(async () => {
+    try {
+      return await importer()
+    } catch (error) {
+      const message = String(error?.message || error || '')
+      const isChunkLoadFailure = /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module/i.test(message)
+
+      if (isChunkLoadFailure) {
+        const retried = sessionStorage.getItem(LAZY_RELOAD_KEY) === '1'
+        if (!retried) {
+          sessionStorage.setItem(LAZY_RELOAD_KEY, '1')
+          const nextUrl = new URL(window.location.href)
+          nextUrl.searchParams.set('_r', Date.now().toString())
+          window.location.replace(nextUrl.toString())
+          return new Promise(() => {})
+        }
+      }
+
+      throw error
+    }
+  })
+}
+
+const Home = lazyWithReload(() => import('./Pages/Home/Home.jsx'))
+const About = lazyWithReload(() => import('./Pages/About/About.jsx'))
+const Events = lazyWithReload(() => import('./Pages/Events/Events.jsx'))
+const Register = lazyWithReload(() => import('./Pages/Register/Register.jsx'))
+const Success = lazyWithReload(() => import('./Pages/Success/Success.jsx'))
+const Contact = lazyWithReload(() => import('./Pages/Contact/Contact.jsx'))
+const Admin = lazyWithReload(() => import('./Pages/Admin/Admin.jsx'))
 
 const preloadPages = [
   () => import('./Pages/Home/Home.jsx'),
@@ -50,6 +76,16 @@ export default function App() {
   const previousPathRef = useRef(pathname)
 
   const routeFallback = <div className="route-fallback">Loading...</div>
+
+  useEffect(() => {
+    sessionStorage.removeItem(LAZY_RELOAD_KEY)
+
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('_r')) {
+      url.searchParams.delete('_r')
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+    }
+  }, [])
 
   useEffect(() => {
     if (previousPathRef.current === pathname) return
