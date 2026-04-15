@@ -1,153 +1,403 @@
 import express from 'express';
 import cors from 'cors';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
-import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Models
+import User from './models/User.js';
+import Event from './models/Event.js';
+import Registration from './models/Registration.js';
+import Contact from './models/Contact.js';
+import Config from './models/Config.js';
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+dotenv.config();
 
-const JWT_SECRET = 'nexiot-super-secret-club-key-2024';
-
-let db;
-
-async function initializeDB() {
-  db = await open({
-    filename: path.join(__dirname, 'database.sqlite'),
-    driver: sqlite3.verbose().Database
-  });
-
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT,
-      role TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      event_id TEXT UNIQUE,
-      title TEXT,
-      description TEXT,
-      category TEXT,
-      status TEXT,
-      date TEXT,
-      time TEXT,
-      venue TEXT,
-      registered INTEGER DEFAULT 0,
-      capacity INTEGER DEFAULT 100,
-      club TEXT,
-      icon TEXT,
-      image TEXT
-    );
-  `);
-
-  // Insert Admin if not exists
-  const adminExists = await db.get('SELECT * FROM users WHERE username = ?', ['admin']);
-  if (!adminExists) {
-    const hashedPw = await bcrypt.hash('nexiot2024', 10);
-    await db.run('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', ['admin', hashedPw, 'admin']);
-    console.log('Default admin seeded.');
-  }
-
-  // Insert seed events if empty
-  const eventCount = await db.get('SELECT COUNT(*) as count FROM events');
-  if (eventCount.count === 0) {
-    await db.run(`INSERT INTO events (event_id, title, description, category, status, date, time, venue, registered, capacity, club, icon, image) VALUES 
-      ('ev-1', 'NeXIoT Club Inauguration', 'Official launch of NexIoT Club with 250 attendees.', 'Talk', 'completed', '2024-11-12T10:00:00Z', '10:00 AM - 12:00 PM', 'Assembly Hall, CBIT, Hyderabad', 250, 250, 'NEX-IOT', '🚀', '/pdf-images/img_p5_1.png'),
-      ('ev-2', 'Fusion Expo', 'An exhibition showcasing 17 diverse IoT projects built by student teams tackling real-world challenges.', 'Project Sprint', 'completed', '2024-11-12T13:00:00Z', '1:00 PM - 3:00 PM', 'Seminar Hall, R&E Block, CBIT', 250, 250, 'NEX-IOT', '⚡', '/pdf-images/img_p10_1.png')
-    `);
-    console.log('Default events seeded.');
-  }
-}
-
-// Auth Middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.status(401).json({ message: 'Access token required' });
-  
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ message: 'Invalid or expired token' });
-    req.user = user;
-    next();
-  });
+// Connect to MongoDB
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+        console.error(`MongoDB connection error: ${error.message}`);
+        process.exit(1);
+    }
 };
 
-/* --- ROUTES --- */
+const app = express();
 
-// Login
+app.use(cors());
+app.use(helmet({ crossOriginResourcePolicy: false })); // allows images to load
+app.use(express.json());
+app.use(morgan('dev'));
+
+const JWT_SECRET = process.env.JWT_SECRET || 'nexiot-super-secret-club-key-2024';
+
+// Middleware for auth
+const protect = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization?.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+      return next();
+    } catch (error) {
+      return res.status(401).json({ message: 'Not authorized, token failed' });
+    }
+  }
+  if (!token) return res.status(401).json({ message: 'Not authorized, no token' });
+};
+
+// =======================================
+// ROUTES
+// =======================================
+
+// 1. Auth/Login
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+    const user = await User.findOne({ username });
 
-    if (user && await bcrypt.compare(password, user.password)) {
-      const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ token, user: { id: user.id, name: user.username, role: user.role } });
+    if (user && (await user.matchPassword(password))) {
+      const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+      res.json({ token, user: { id: user._id, name: user.username, role: user.role } });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 
-// Events
+app.post('/api/auth/register-admin', async (req, res) => {
+  try {
+    const { username, password, secretKey } = req.body;
+    const expectedSecret = process.env.ADMIN_SECRET_KEY || 'NEXIOT-SECURE-KEY-2025';
+    
+    if (secretKey !== expectedSecret) {
+      return res.status(403).json({ message: 'Invalid security key' });
+    }
+
+    const userExists = await User.findOne({ username });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const newAdmin = await User.create({ username, password, role: 'admin' });
+    res.status(201).json({ message: 'Admin account created successfully', user: { username: newAdmin.username } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+});
+
+// Get all admins
+app.get('/api/auth/admins', protect, async (req, res) => {
+  try {
+    const admins = await User.find({ role: { $in: ['admin', 'superadmin'] } }).select('-password');
+    res.json(admins);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching admins' });
+  }
+});
+
+// Delete admin by ID
+app.delete('/api/auth/admins/:id', protect, async (req, res) => {
+  try {
+    const admin = await User.findByIdAndDelete(req.params.id);
+    if (!admin) return res.status(404).json({ message: 'Admin not found' });
+    res.json({ message: 'Admin deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting admin' });
+  }
+});
+
+// Config Settings
+app.get('/api/config', async (req, res) => {
+  try {
+    let config = await Config.findOne();
+    if (!config) config = await Config.create({});
+    res.json({ registrationsOpen: config.registrationsOpen });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching config' });
+  }
+});
+
+app.put('/api/config', protect, async (req, res) => {
+  try {
+    let config = await Config.findOne();
+    if (!config) config = await Config.create({});
+    
+    if (req.body.registrationsOpen !== undefined) {
+      config.registrationsOpen = req.body.registrationsOpen;
+    }
+    
+    await config.save();
+    res.json({ message: 'Config updated successfully', config: { registrationsOpen: config.registrationsOpen } });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating config' });
+  }
+});
+
+// 2. Events Configuration
 app.get('/api/events', async (req, res) => {
   try {
-    const events = await db.all('SELECT * FROM events');
-    const formattedEvents = events.map(e => ({ ...e, id: e.event_id })); // mapping PK for frontend standard
+    const events = await Event.find().sort({ date: 1 });
+    // Transform id mapping to front-end schema if needed
+    const formattedEvents = events.map(e => ({
+       ...e._doc, 
+       id: e.event_id, 
+       _id: e._id 
+    }));
     res.json(formattedEvents);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching events' });
   }
 });
 
-app.post('/api/events', authenticateToken, async (req, res) => {
+app.post('/api/events', protect, async (req, res) => {
   try {
-    const { title, description, category, status, date, time, venue, capacity, image } = req.body;
+    const { title, description, category, status, date, time, venue, capacity, image, club, icon } = req.body;
     const event_id = 'ev-' + Date.now();
-    await db.run(
-      'INSERT INTO events (event_id, title, description, category, status, date, time, venue, capacity, image, club) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [event_id, title, description, category, status, date, time, venue, capacity, image, 'NEX-IOT']
-    );
-    res.status(201).json({ message: 'Event created successfully', id: event_id });
+    const event = await Event.create({
+      event_id, title, description, category, status, date, time, venue, capacity, image,
+      club: club || 'NEX-IOT', icon: icon || '⚡'
+    });
+    res.status(201).json(event);
   } catch (error) {
     res.status(500).json({ message: 'Error creating event' });
   }
 });
 
-// Admin Stats
-app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+// Update event by ID
+app.put('/api/events/:id', protect, async (req, res) => {
   try {
-    const eventCountRow = await db.get('SELECT COUNT(*) as count FROM events');
+    const { title, description, category, status, date, time, venue, capacity, image, icon } = req.body;
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { title, description, category, status, date, time, venue, capacity, image, icon },
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating event' });
+  }
+});
+
+// Delete event by ID
+app.delete('/api/events/:id', protect, async (req, res) => {
+  try {
+    const event = await Event.findByIdAndDelete(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting event' });
+  }
+});
+
+// 3. Registrations 
+app.post('/api/registrations', async (req, res) => {
+  try {
+    const { eventId, name, email, rollNumber, phoneNumber, semester } = req.body;
+
+    // First ensure global config allows it unless we check per-event status
+    const config = await Config.findOne();
+    if (!config || !config.registrationsOpen) {
+      return res.status(403).json({ message: 'Registrations are globally closed' });
+    }
+
+    // Check if the event exists
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Enforce Capacity logic
+    if (event.registered >= event.capacity) {
+      return res.status(400).json({ message: 'Sorry, this event is already fully booked.' });
+    }
+
+    // Check if already registered
+    const existingEntry = await Registration.findOne({ eventId, rollNumber });
+    if(existingEntry) return res.status(400).json({ message: 'Already registered for this event.' });
+
+    // Create Registration
+    const registration = await Registration.create({ eventId, name: req.body.fullName || name, email, rollNumber, phoneNumber: req.body.phone || req.body.phoneNumber, branch: req.body.branch, year: req.body.year, skills: req.body.skills });
+    
+    // Update Event Tally
+    event.registered += 1;
+    await event.save();
+
+    res.status(201).json(registration);
+  } catch (error) {
+    res.status(500).json({ message: 'Error registering for event' });
+  }
+});
+
+// Admin Registration GET
+app.get('/api/registrations', protect, async (req, res) => {
+  try {
+    const regs = await Registration.find().populate('eventId', 'title date');
+    const formatted = regs.map(r => ({
+      id: r._id,
+      fullName: r.name,
+      rollNumber: r.rollNumber,
+      email: r.email,
+      phone: r.phoneNumber || 'N/A',
+      status: r.status || 'pending',
+      createdAt: r.createdAt,
+      branch: 'CSE', // placeholder if not captured correctly initially
+      year: r.semester || 'N/A',
+      eventTitle: r.eventId?.title || 'Unknown Event'
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching registrations' });
+  }
+});
+
+app.put('/api/registrations/:id/approve', protect, async (req, res) => {
+  try {
+    const reg = await Registration.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    if (!reg) return res.status(404).json({ message: 'Not found' });
+    res.json({ message: 'Approved!', reg });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating registration' });
+  }
+});
+
+app.delete('/api/registrations/:id', protect, async (req, res) => {
+  try {
+    await Registration.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting registration' });
+  }
+});
+
+app.get('/api/registrations/export', protect, async (req, res) => {
+  try {
+    const regs = await Registration.find().populate('eventId', 'title date');
+    
+    const headers = ['ID', 'Full Name', 'Roll Number', 'Email', 'Phone', 'Branch', 'Year', 'Event Title', 'Status', 'Created At'];
+    const rows = regs.map(r => [
+      r._id.toString(),
+      r.name || '',
+      r.rollNumber || '',
+      r.email || '',
+      r.phoneNumber || 'N/A',
+      r.branch || 'N/A',
+      r.semester || 'N/A',
+      r.eventId?.title || 'Unknown Event',
+      r.status || 'pending',
+      new Date(r.createdAt).toLocaleString()
+    ]);
+    
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${(cell || '').toString().replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="registrations-export.csv"');
+    res.send(csvContent);
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting registrations' });
+  }
+});
+
+// 4. Contact Form Route
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    const contact = await Contact.create({ name, email, subject, message });
+    res.status(201).json({ message: 'Message sent successfully!', data: contact });
+  } catch (error) {
+    res.status(500).json({ message: 'Error submitting message' });
+  }
+});
+
+// Admin Contact Routes
+app.get('/api/contact', protect, async (req, res) => {
+  try {
+    const queries = await Contact.find().sort({ createdAt: -1 });
+    res.json(queries);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching queries' });
+  }
+});
+
+app.put('/api/contact/:id', protect, async (req, res) => {
+  try {
+    const query = await Contact.findByIdAndUpdate(req.params.id, { isResolved: true }, { new: true });
+    res.json({ message: 'Marked resolved', query });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking query resolved' });
+  }
+});
+
+app.delete('/api/contact/:id', protect, async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Query deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting query' });
+  }
+});
+
+// 5. Admin Stats Route
+app.get('/api/admin/stats', protect, async (req, res) => {
+  try {
+    const totalEvents = await Event.countDocuments();
+    const totalRegistrations = await Registration.countDocuments();
+    const pendingQueries = await Contact.countDocuments({ isResolved: false });
+    
+    // Just a basic breakdown mapping original UI layout expectations
     res.json({ 
-      totalMembers: 248, 
-      pendingApprovals: 12, 
-      upcomingEvents: 4, 
-      totalEvents: eventCountRow.count, 
-      attendanceToday: 32, 
-      thisMonthReg: 28 
+      totalMembers: totalRegistrations, 
+      pendingApprovals: pendingQueries, 
+      upcomingEvents: await Event.countDocuments({ status: 'upcoming' }), 
+      totalEvents: totalEvents, 
+      attendanceToday: 0, 
+      thisMonthReg: totalRegistrations 
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching stats' });
   }
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    message: err.message || 'Something went wrong on the server',
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack 
+  });
+});
+
 const PORT = process.env.PORT || 8080;
 
-initializeDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Production Backend listening safely on port ${PORT}`);
-  });
-}).catch(console.error);
+// Setup initial admin if it doesn't exist or re-sync
+const seedAdmin = async () => {
+    try {
+        const adminExists = await User.findOne({ username: 'admin' });
+        if(!adminExists) {
+            await User.create({ username: 'admin', password: 'nexiot2026', role: 'admin' });
+            console.log('Seeded default admin user: admin | nexiot2026');
+        } else {
+            // Ensure the password is correct as requested
+            adminExists.password = 'nexiot2026';
+            await adminExists.save();
+            console.log('Admin password synchronized to nexiot2026');
+        }
+    } catch (e) {
+        console.error('Seed Admin error:', e);
+    }
+};
+
+connectDB().then(() => {
+  seedAdmin();
+  app.listen(PORT, () => console.log(`🚀 Production Backend listening on port ${PORT}`));
+});
