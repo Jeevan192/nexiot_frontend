@@ -13,11 +13,11 @@ const statusConfig = {
 export default function EventCard({ event, onRegister }) {
   const navigate = useNavigate()
   const status = statusConfig[event.status] || statusConfig.upcoming
-  const canRegister = CLUB_CONFIG.registrationsOpen && event.status !== 'closed' && event.status !== 'completed'
+  const canRegister = CLUB_CONFIG.registrationsOpen
 
   const handleRegister = () => {
     if (onRegister) onRegister(event)
-    else navigate('/register', { state: { eventId: event.id, eventName: event.title } })
+    else navigate('/register')
   }
 
   return (
@@ -64,11 +64,11 @@ export default function EventCard({ event, onRegister }) {
         <div className="event-card-footer">
           {canRegister ? (
             <button className="btn btn-primary" onClick={handleRegister} aria-label={`Register for ${event.title}`}>
-              Register Now <FiArrowRight />
+              Join Club <FiArrowRight />
             </button>
           ) : (
             <button className="btn btn-secondary" disabled>
-              {event.status === 'completed' ? 'Event Over' : 'Registrations Closed'}
+              Registrations Closed
             </button>
           )}
         </div>

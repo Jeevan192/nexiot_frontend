@@ -6,41 +6,41 @@ import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Events.css'
 
 const CATEGORIES = ['All', 'Workshop', 'Conference', 'Fest', 'Talk', 'Project Sprint']
-const STATUSES = ['All', 'open', 'upcoming', 'completed', 'closed']
+const STATUSES = ['All', 'open', 'upcoming', 'ongoing', 'completed', 'closed']
 
 export default function Events() {
-  const [events, setEvents] = useState(() => {
-    try {
-      const cached = localStorage.getItem('nexiot_events_cache')
-      const parsed = cached ? JSON.parse(cached) : null
-      return Array.isArray(parsed) ? parsed : []
-    } catch {
-      return []
-    }
-  })
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cached = localStorage.getItem('nexiot_events_cache')
-      const parsed = cached ? JSON.parse(cached) : null
-      return !Array.isArray(parsed)
-    } catch {
-      return true
-    }
-  })
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeStatus, setActiveStatus] = useState('All')
 
   useEffect(() => {
-    getEvents()
-      .then(res => {
+    let active = true
+
+    const fetchEvents = async (attempt = 1) => {
+      try {
+        const res = await getEvents()
         const freshEvents = Array.isArray(res?.data) ? res.data : []
+        if (!active) return
         setEvents(freshEvents)
-        localStorage.setItem('nexiot_events_cache', JSON.stringify(freshEvents))
-      })
-      .catch((err) => {
+        setLoadError('')
+      } catch (err) {
+        if (!active) return
+        if (attempt < 2) {
+          fetchEvents(attempt + 1)
+          return
+        }
         console.error('Events fetch failed:', err)
-      })
-      .finally(() => setLoading(false))
+        setLoadError('Unable to fetch latest events from database. Please try again in a moment.')
+        setEvents([])
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    fetchEvents()
+    return () => { active = false }
   }, [])
 
   const filtered = (events || []).filter(e => {
@@ -93,6 +93,11 @@ export default function Events() {
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-secondary)' }}>
             <div style={{ animation: 'rotate 1s linear infinite', display: 'inline-block' }}><FiLoader size={28} /></div>
             <p style={{ marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Loading events...</p>
+          </div>
+        ) : loadError ? (
+          <div className="events-empty">
+            <FiCalendar size={40} />
+            <p>{loadError}</p>
           </div>
         ) : (
           <div className="events-grid motion-fade-up motion-delay-3">

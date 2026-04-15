@@ -1,6 +1,16 @@
 import api from './api.js';
 
-export const getEvents = () => api.get('/api/events');
+export const getEvents = async () => {
+	try {
+		return await api.get('/api/events');
+	} catch (error) {
+		// Fallback to same-origin API in case custom base URL is unreachable.
+		const res = await fetch('/api/events');
+		if (!res.ok) throw error;
+		const data = await res.json();
+		return { data };
+	}
+};
 export const getEventById = (id) => api.get(`/api/events/${id}`);
 export const createEvent = (data) => api.post('/api/events', data);
 export const updateEvent = (id, data) => api.put(`/api/events/${id}`, data);

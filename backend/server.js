@@ -52,6 +52,39 @@ const normalizeEvent = (eventDoc) => {
   };
 };
 
+const DEFAULT_EVENTS = [
+  {
+    event_id: 'ev-1',
+    title: 'NeXIoT Club Inauguration',
+    description: 'The official launch of NeXIoT Club at CBIT. An event dedicated to fostering innovation, learning, and collaboration in IoT and emerging tech.',
+    category: 'Talk',
+    status: 'completed',
+    date: new Date('2024-11-12T10:00:00Z'),
+    time: '10:00 AM - 12:00 PM',
+    venue: 'Assembly Hall, CBIT, Hyderabad',
+    registered: 250,
+    capacity: 250,
+    club: 'NEX-IOT',
+    icon: '⚡',
+    image: '/pdf-images/img_p4_1.png'
+  },
+  {
+    event_id: 'ev-2',
+    title: 'Fusion Expo',
+    description: 'An exhibition showcasing 17 diverse IoT projects built by student teams tackling real-world challenges, followed by a Q&A and networking session.',
+    category: 'Project Sprint',
+    status: 'completed',
+    date: new Date('2024-11-12T13:00:00Z'),
+    time: '1:00 PM - 3:00 PM',
+    venue: 'Seminar Hall, R&E Block, CBIT',
+    registered: 250,
+    capacity: 250,
+    club: 'NEX-IOT',
+    icon: '⚡',
+    image: '/pdf-images/img_p5_1.png'
+  }
+];
+
 // Middleware for auth
 const protect = async (req, res, next) => {
   let token;
@@ -181,7 +214,11 @@ app.put('/api/config', protect, async (req, res) => {
 // 2. Events Configuration
 app.get('/api/events', async (req, res) => {
   try {
-    const events = await Event.find().sort({ date: 1 }).lean();
+    let events = await Event.find().sort({ date: 1 }).lean();
+    if (events.length === 0) {
+      await Event.insertMany(DEFAULT_EVENTS, { ordered: false });
+      events = await Event.find().sort({ date: 1 }).lean();
+    }
     const formattedEvents = events.map(normalizeEvent);
     res.json(formattedEvents);
   } catch (error) {
@@ -237,7 +274,7 @@ app.delete('/api/events/:id', protect, async (req, res) => {
 // 3. Registrations 
 app.post('/api/registrations', async (req, res) => {
   try {
-    const { eventId, name, email, rollNumber, phoneNumber, semester } = req.body;
+    const { name, email, rollNumber, phoneNumber, semester } = req.body;
 
     // First ensure global config allows it unless we check per-event status
     const config = await Config.findOne();
@@ -245,47 +282,32 @@ app.post('/api/registrations', async (req, res) => {
       return res.status(403).json({ message: 'Registrations are globally closed' });
     }
 
-    let event = null;
+    // Recruitment is club-level; no event association required.
+    const normalizedRoll = String(rollNumber || '').trim().toUpperCase();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
 
-    // Resolve event by provided ID (supports both Mongo _id and legacy event_id)
-    if (eventId) {
-      const eventQuery = mongoose.Types.ObjectId.isValid(eventId)
-        ? { _id: eventId }
-        : { event_id: eventId };
-      event = await Event.findOne(eventQuery);
-    }
+    const existingEntry = await Registration.findOne({
+      $or: [{ rollNumber: normalizedRoll }, { email: normalizedEmail }]
+    });
+    if (existingEntry) return res.status(400).json({ message: 'You have already submitted a recruitment application.' });
 
-    // Fallback for general registration forms opened without a specific event.
-    if (!event) {
-      event = await Event.findOne({ status: { $in: ['open', 'upcoming', 'ongoing'] } }).sort({ date: 1 });
-    }
-
-    // Last fallback: use earliest available event if statuses are not maintained.
-    if (!event) {
-      event = await Event.findOne().sort({ date: 1 });
-    }
-
-    if (!event) return res.status(404).json({ message: 'Event not found' });
-
-    // Enforce Capacity logic
-    if (event.registered >= event.capacity) {
-      return res.status(400).json({ message: 'Sorry, this event is already fully booked.' });
-    }
-
-    // Check if already registered
-    const existingEntry = await Registration.findOne({ eventId: event._id, rollNumber });
-    if(existingEntry) return res.status(400).json({ message: 'Already registered for this event.' });
-
-    // Create Registration
-    const registration = await Registration.create({ eventId: event._id, name: req.body.fullName || name, email, rollNumber, phoneNumber: req.body.phone || req.body.phoneNumber, branch: req.body.branch, year: req.body.year, skills: req.body.skills });
-    
-    // Update Event Tally
-    event.registered += 1;
-    await event.save();
+    const registration = await Registration.create({
+      name: req.body.fullName || name,
+      email: normalizedEmail,
+      rollNumber: normalizedRoll,
+      phoneNumber: req.body.phone || req.body.phoneNumber || phoneNumber,
+      branch: req.body.branch,
+      year: req.body.year,
+      semester: req.body.year || semester,
+      skills: Array.isArray(req.body.skills) ? req.body.skills : [],
+      whyJoin: req.body.whyJoin,
+      status: 'pending',
+      eventId: null,
+    });
 
     res.status(201).json(registration);
   } catch (error) {
-    res.status(500).json({ message: 'Error registering for event' });
+    res.status(500).json({ message: 'Error submitting recruitment application' });
   }
 });
 
@@ -301,9 +323,9 @@ app.get('/api/registrations', protect, async (req, res) => {
       phone: r.phoneNumber || 'N/A',
       status: r.status || 'pending',
       createdAt: r.createdAt,
-      branch: 'CSE', // placeholder if not captured correctly initially
-      year: r.semester || 'N/A',
-      eventTitle: r.eventId?.title || 'Unknown Event'
+      branch: r.branch || 'N/A',
+      year: r.year || r.semester || 'N/A',
+      eventTitle: r.eventId?.title || 'Club Recruitment'
     }));
     res.json(formatted);
   } catch (error) {
