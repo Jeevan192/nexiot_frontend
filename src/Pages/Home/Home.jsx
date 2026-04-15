@@ -361,6 +361,21 @@ export default function Home() {
     }
   }, [shouldReduceMotion])
 
+  const pointerGlowBackground = useMotionTemplate`
+    radial-gradient(
+      600px circle at ${mouseX}px ${mouseY}px,
+      rgba(42, 240, 224, 0.05),
+      transparent 80%
+    )
+  `
+
+  const dynamicBoxShadow = useTransform(
+    [smoothPx, smoothPy],
+    ([spx, spy]) => `${-spx * 30}px ${-spy * 30 + 40}px 80px rgba(0, 0, 0, 0.6)`
+  )
+
+  const glareBackgroundTemplate = useMotionTemplate`radial-gradient(ellipse at ${glareX} ${glareY}, rgba(255, 255, 255, ${glareOpacity}), transparent 60%)`
+
   const goRegister = () => {
     if (CLUB_CONFIG.registrationsOpen) navigate('/register')
   }
@@ -371,13 +386,7 @@ export default function Home() {
       {!shouldReduceMotion && <motion.div
         className="pointer-events-none fixed inset-0 z-30 transition duration-300 pointer-events-none"
         style={{
-          background: useMotionTemplate`
-            radial-gradient(
-              600px circle at ${mouseX}px ${mouseY}px,
-              rgba(42, 240, 224, 0.05),
-              transparent 80%
-            )
-          `,
+          background: pointerGlowBackground,
           willChange: 'background'
         }}
       />}
@@ -483,17 +492,14 @@ export default function Home() {
                   transformStyle: "preserve-3d",
                   boxShadow: shouldReduceMotion
                     ? '0 24px 60px -22px rgba(0, 0, 0, 0.6)'
-                    : useTransform(
-                      [smoothPx, smoothPy],
-                      ([spx, spy]) => `${-spx * 30}px ${-spy * 30 + 40}px 80px rgba(0, 0, 0, 0.6)`
-                    )
+                    : dynamicBoxShadow
                 }}
               >
                 {/* Dynamic Glare Overlay */}
                 {!shouldReduceMotion && <motion.div 
                   className="pointer-events-none absolute inset-0 z-50 rounded-[24px]"
                   style={{
-                    background: useMotionTemplate`radial-gradient(ellipse at ${glareX} ${glareY}, rgba(255, 255, 255, ${glareOpacity}), transparent 60%)`,
+                    background: glareBackgroundTemplate,
                     mixBlendMode: 'overlay',
                   }}
                 />}
