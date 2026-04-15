@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Event from './models/Event.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const MONGO_URI = 'mongodb+srv://jeevanreddycbit_db_user:qzy79Z7UDFRpmEyu@projects.vx0pjne.mongodb.net/nexiot_db?appName=Projects';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+const MONGO_URI = process.env.MONGO_URI;
 
 const MOCK_EVENTS = [
   {
@@ -41,6 +46,10 @@ const MOCK_EVENTS = [
 
 const runSeeder = async () => {
   try {
+    if (!MONGO_URI) {
+      throw new Error('MONGO_URI is not set in environment variables');
+    }
+
     const conn = await mongoose.connect(MONGO_URI);
     console.log(`Connected to DB: ${conn.connection.host}`);
     
