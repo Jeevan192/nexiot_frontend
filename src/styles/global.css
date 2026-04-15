@@ -206,11 +206,13 @@ body {
   background:
     linear-gradient(165deg, rgba(18, 43, 69, 0.84), rgba(10, 27, 44, 0.92)),
     var(--card);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(8px); /* Reduced for performance */
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: var(--shadow-main);
   padding: 30px;
   transition: var(--ease);
+  will-change: transform;
+  transform: translateZ(0); /* Hardware accelerate to prevent redraws during scroll */
 }
 
 .glass-card:hover {
@@ -414,28 +416,30 @@ textarea.form-input {
 
 .app-ambient {
   position: fixed;
-  border-radius: 999px;
+  border-radius: 50%;
   pointer-events: none;
-  filter: blur(110px);
+  /* Replaced expensive filter: blur() with hardware-friendly radial-gradient */
   z-index: -1;
   opacity: 0.32;
   animation: ambientFloat 14s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0); /* Force GPU compositing */
 }
 
 .app-ambient-1 {
-  width: 420px;
-  height: 420px;
+  width: 600px; /* Made slightly wider to compensate for no filter */
+  height: 600px;
   top: 10%;
-  right: -170px;
-  background: rgba(42, 240, 224, 0.58);
+  right: -250px;
+  background: radial-gradient(circle, rgba(42, 240, 224, 0.45) 0%, rgba(42, 240, 224, 0) 70%);
 }
 
 .app-ambient-2 {
-  width: 420px;
-  height: 420px;
-  left: -170px;
+  width: 600px;
+  height: 600px;
+  left: -250px;
   bottom: 10%;
-  background: rgba(102, 191, 255, 0.3);
+  background: radial-gradient(circle, rgba(102, 191, 255, 0.25) 0%, rgba(102, 191, 255, 0) 70%);
   animation-delay: 2s;
 }
 
@@ -575,9 +579,8 @@ textarea.form-input {
 
   .app-ambient {
     display: block !important;
-    width: 250px !important;
-    height: 250px !important;
-    filter: blur(40px) !important; /* Reduced blur radius to prevent mobile lag */
+    width: 350px !important; /* Slightly larger since radial gradient */
+    height: 350px !important;
     will-change: transform;
     transform: translateZ(0); /* Hardware acceleration */
     backface-visibility: hidden;
