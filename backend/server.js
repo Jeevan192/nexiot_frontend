@@ -245,11 +245,26 @@ app.post('/api/registrations', async (req, res) => {
       return res.status(403).json({ message: 'Registrations are globally closed' });
     }
 
-    // Check if the event exists (supports both Mongo _id and legacy event_id)
-    const eventQuery = mongoose.Types.ObjectId.isValid(eventId)
-      ? { _id: eventId }
-      : { event_id: eventId };
-    const event = await Event.findOne(eventQuery);
+    let event = null;
+
+    // Resolve event by provided ID (supports both Mongo _id and legacy event_id)
+    if (eventId) {
+      const eventQuery = mongoose.Types.ObjectId.isValid(eventId)
+        ? { _id: eventId }
+        : { event_id: eventId };
+      event = await Event.findOne(eventQuery);
+    }
+
+    // Fallback for general registration forms opened without a specific event.
+    if (!event) {
+      event = await Event.findOne({ status: { $in: ['open', 'upcoming', 'ongoing'] } }).sort({ date: 1 });
+    }
+
+    // Last fallback: use earliest available event if statuses are not maintained.
+    if (!event) {
+      event = await Event.findOne().sort({ date: 1 });
+    }
+
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
     // Enforce Capacity logic
@@ -258,11 +273,11 @@ app.post('/api/registrations', async (req, res) => {
     }
 
     // Check if already registered
-    const existingEntry = await Registration.findOne({ eventId, rollNumber });
+    const existingEntry = await Registration.findOne({ eventId: event._id, rollNumber });
     if(existingEntry) return res.status(400).json({ message: 'Already registered for this event.' });
 
     // Create Registration
-    const registration = await Registration.create({ eventId, name: req.body.fullName || name, email, rollNumber, phoneNumber: req.body.phone || req.body.phoneNumber, branch: req.body.branch, year: req.body.year, skills: req.body.skills });
+    const registration = await Registration.create({ eventId: event._id, name: req.body.fullName || name, email, rollNumber, phoneNumber: req.body.phone || req.body.phoneNumber, branch: req.body.branch, year: req.body.year, skills: req.body.skills });
     
     // Update Event Tally
     event.registered += 1;

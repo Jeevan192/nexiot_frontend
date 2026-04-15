@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FiCheckCircle, FiArrowRight, FiX } from 'react-icons/fi'
 import toast from 'react-hot-toast'
-import { submitRegistration } from '../../services/eventService.js'
+import { submitRegistration, getEvents } from '../../services/eventService.js'
 import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Register.css'
 
@@ -33,6 +33,8 @@ function validate(form) {
 export default function Register() {
   const navigate = useNavigate()
   const { state } = useLocation()
+  const [selectedEventId, setSelectedEventId] = useState(state?.eventId || '')
+  const [selectedEventName, setSelectedEventName] = useState(state?.eventName || '')
 
   const [form, setForm] = useState({
     fullName: '', rollNumber: '', branch: '', year: '',
@@ -44,6 +46,22 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false)
 
   const skillInputRef = useRef()
+
+  useEffect(() => {
+    if (selectedEventId) return
+
+    getEvents()
+      .then((res) => {
+        const events = Array.isArray(res?.data) ? res.data : []
+        if (events.length > 0) {
+          setSelectedEventId(events[0].id)
+          setSelectedEventName(events[0].title || 'Selected Event')
+        }
+      })
+      .catch(() => {
+        // Backend has fallback logic; no-op here.
+      })
+  }, [selectedEventId])
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
@@ -66,10 +84,11 @@ export default function Register() {
     }
     const errs = validate(form)
     if (Object.keys(errs).length) { setErrors(errs); toast.error('Please fix the errors.'); return }
+    if (!selectedEventId) { toast.error('No active event is available for registration right now.'); return }
     setErrors({})
     setSubmitting(true)
     try {
-      const payload = { ...form, skills, eventId: state?.eventId || null }
+      const payload = { ...form, skills, eventId: selectedEventId }
       const res = await submitRegistration(payload)
       const successPayload = { regId: res.data?.id, name: form.fullName, email: form.email }
       sessionStorage.setItem('nextiot_last_registration', JSON.stringify(successPayload))
@@ -252,12 +271,12 @@ export default function Register() {
               </div>
             </div>
 
-            {state?.eventName && (
+            {selectedEventName && (
               <div className="register-info-card glass-card" style={{ borderColor: 'rgba(0,245,255,0.3)' }}>
                 <h4>Registering For</h4>
                 <div className="perk-item">
                   <FiCheckCircle size={14} />
-                  <span style={{ color: 'var(--cyan)' }}>{state.eventName}</span>
+                  <span style={{ color: 'var(--cyan)' }}>{selectedEventName}</span>
                 </div>
               </div>
             )}
