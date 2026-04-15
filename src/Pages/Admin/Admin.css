@@ -148,8 +148,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background: rgba(5,10,20,0.9);
-  backdrop-filter: blur(10px);
+  background: rgba(5,10,20,0.98);
+  /* no backdrop-filter to prevent dashboard scrolling lag */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -196,8 +196,7 @@
 .admin-sidebar-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.76);
   z-index: 150;
   display: none;
 }
@@ -502,8 +501,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.85);
   z-index: 500;
   display: flex;
   align-items: center;

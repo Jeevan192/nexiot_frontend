@@ -235,9 +235,11 @@ export default function Home() {
     }
   }, [shouldReduceMotion])
 
-  const { scrollYProgress } = useScroll();
-  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
-  const ringScale = useTransform(scrollYProgress, [0, 1], [1, 1.5]);
+  // Disabled Framer Motion useScroll hook to completely eradicate scrolling 
+  // framerate lag and jitter on mobile and entry-level desktop GPUs.
+  // const { scrollYProgress } = useScroll();
+  // const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
+  // const ringScale = useTransform(scrollYProgress, [0, 1], [1, 1.5]);
 
   // Global mouse tracking for the spotlight glow
   const mouseX = useMotionValue(0)
@@ -404,7 +406,7 @@ export default function Home() {
 
       {/* ===== HERO ===== */}
       <section className="hero">
-        <motion.div className="hero-bg" style={{ y: heroY }} />
+        <motion.div className="hero-bg" />
 
         <div className="container">
           <div className="hero-layout-centered">

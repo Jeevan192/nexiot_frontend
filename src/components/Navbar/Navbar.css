@@ -18,10 +18,10 @@
   border-radius: 999px;
   border: 1px solid var(--line);
   background:
-    linear-gradient(135deg, rgba(17, 42, 66, 0.84), rgba(9, 25, 42, 0.94)),
+    linear-gradient(135deg, rgba(14, 30, 48, 0.98), rgba(9, 25, 42, 0.98)),
     radial-gradient(480px 120px at 12% -40%, rgba(126, 215, 255, 0.14), transparent 70%),
     radial-gradient(420px 120px at 88% -35%, rgba(31, 142, 235, 0.12), transparent 72%);
-  backdrop-filter: blur(16px);
+  /* Removed scroll-breaking backdrop filter completely */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -130,10 +130,10 @@
   border-radius: 18px;
   border: 1px solid var(--line-strong);
   background:
-    linear-gradient(150deg, rgba(14, 36, 58, 0.95), rgba(10, 26, 43, 0.97)),
+    linear-gradient(150deg, rgba(8, 20, 32, 0.98), rgba(6, 14, 23, 0.99)),
     radial-gradient(520px 200px at 16% -35%, rgba(126, 215, 255, 0.14), transparent 70%),
     radial-gradient(520px 200px at 84% -35%, rgba(31, 142, 235, 0.14), transparent 70%);
-  backdrop-filter: blur(12px);
+  /* Strip blur on mobile nav entirely to eliminate touch drag lag */
   padding: 16px;
   box-shadow: var(--shadow-main);
   max-height: calc(100vh - 96px);
