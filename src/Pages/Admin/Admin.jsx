@@ -9,17 +9,18 @@ import toast from 'react-hot-toast'
 import { login, isAuthenticated, getUser } from '../../services/authService.js'
 import {
   getRegistrations, approveRegistration, deleteRegistration, exportRegistrations,
-  getEvents, createEvent, updateEvent, deleteEvent, getDashboardStats, getAttendance, markAttendance,
+  getEvents, createEvent, updateEvent, deleteEvent, getDashboardStats, getAttendance, markAttendance, createAdmin
 } from '../../services/eventService.js'
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar.jsx'
 import './Admin.css'
 
 // ===========================
-// ADMIN LOGIN
+// ADMIN LOGIN / REGISTER
 // ===========================
 function AdminLogin() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [form, setForm] = useState({ username: '', password: '', secretKey: '' })
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -28,11 +29,19 @@ function AdminLogin() {
     if (!form.username || !form.password) { toast.error('Fill in both fields'); return }
     setLoading(true)
     try {
-      await login(form)
-      toast.success('Welcome back, Admin!')
-      navigate('/admin/dashboard')
+      if (isRegistering) {
+        if (!form.secretKey) { toast.error('Secret key required for new admins'); setLoading(false); return; }
+        await createAdmin({ username: form.username, password: form.password, secretKey: form.secretKey })
+        toast.success('Admin created successfully! You can now login.')
+        setIsRegistering(false)
+        setForm(f => ({ ...f, password: '', secretKey: '' }))
+      } else {
+        await login({ username: form.username, password: form.password })
+        toast.success('Welcome back, Admin!')
+        navigate('/admin/dashboard')
+      }
     } catch (err) {
-      const msg = err.response?.data?.message || 'Invalid credentials'
+      const msg = err.response?.data?.message || (isRegistering ? 'Registration failed' : 'Invalid credentials')
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -54,7 +63,7 @@ function AdminLogin() {
         </button>
         <div className="admin-login-header" style={{ marginTop: 20 }}>
           <div className="admin-login-icon">IoT</div>
-          <h2>Admin Portal</h2>
+          <h2>{isRegistering ? 'Register Admin' : 'Admin Portal'}</h2>
           <p>// NEX-IOT · CBIT · SECURE ACCESS</p>
         </div>
         <form className="admin-login-form" onSubmit={handleLogin} noValidate>
@@ -79,7 +88,7 @@ function AdminLogin() {
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 placeholder="••••••••"
-                autoComplete="current-password"
+                autoComplete={isRegistering ? "new-password" : "current-password"}
                 style={{ paddingRight: '44px' }}
               />
               <button
@@ -92,10 +101,34 @@ function AdminLogin() {
               </button>
             </div>
           </div>
+          
+          {isRegistering && (
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label className="form-label" htmlFor="admin-secret">Master Secret Key (Required)</label>
+              <input
+                id="admin-secret"
+                className="form-input"
+                type="password"
+                value={form.secretKey}
+                onChange={e => setForm(f => ({ ...f, secretKey: e.target.value }))}
+                placeholder="Secure Key"
+              />
+            </div>
+          )}
+
           <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '13px', marginTop: 8 }} disabled={loading}>
-            {loading ? 'Authenticating...' : <><FiLock /> Sign In to Admin</>}
+            {loading ? 'Authenticating...' : <><FiLock /> {isRegistering ? 'Create Admin Account' : 'Sign In to Admin'}</>}
           </button>
         </form>
+        <p style={{ textAlign: 'center', marginTop: 15 }}>
+          <button 
+             type="button" 
+             onClick={() => setIsRegistering(!isRegistering)}
+             style={{ background: 'none', border: 'none', color: 'var(--cyan)', cursor: 'pointer', textDecoration: 'underline' }}
+          >
+            {isRegistering ? 'Already have an account? Login' : 'Need a new admin account? Register'}
+          </button>
+        </p>
         <p style={{ textAlign: 'center', marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-secondary)', letterSpacing: '0.08em' }}>
           Protected by JWT · Role-Based Access Control
         </p>
