@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getToken, logout } from './authService.js'
 import toast from 'react-hot-toast'
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const BASE_URL = import.meta.env.VITE_API_URL || ''
 let isHandlingUnauthorized = false
 
 const getErrorMessage = (error) => {
@@ -13,7 +13,6 @@ const getErrorMessage = (error) => {
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
-  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
 

@@ -399,5 +399,9 @@ const seedAdmin = async () => {
 
 connectDB().then(() => {
   seedAdmin();
-  app.listen(PORT, () => console.log(`🚀 Production Backend listening on port ${PORT}`));
+  if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`🚀 Development Backend listening on port ${PORT}`));
+  }
 });
+
+export default app;
