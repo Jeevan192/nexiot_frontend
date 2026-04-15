@@ -142,20 +142,21 @@ function AdminLogin() {
 // ===========================
 // DASHBOARD
 // ===========================
-const MOCK_STATS = {
-  totalMembers: 248,
-  pendingApprovals: 12,
-  upcomingEvents: 4,
-  totalEvents: 18,
-  attendanceToday: 32,
-  thisMonthReg: 28,
+const EMPTY_STATS = {
+  totalMembers: 0,
+  pendingApprovals: 0,
+  upcomingEvents: 0,
+  totalEvents: 0,
+  attendanceToday: 0,
+  thisMonthReg: 0,
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
 const MOCK_CHART = [30, 45, 28, 60, 75, 52, 88, 28]
 
 function Dashboard() {
-  const [stats, setStats] = useState(MOCK_STATS)
+  const [stats, setStats] = useState(EMPTY_STATS)
+  const [loadingStats, setLoadingStats] = useState(true)
   const [config, setConfigState] = useState({ registrationsOpen: false })
   const user = getUser()
 
@@ -163,6 +164,7 @@ function Dashboard() {
     getDashboardStats()
       .then(res => setStats(res.data))
       .catch((e) => { console.error(e); })
+      .finally(() => setLoadingStats(false))
     getConfig()
       .then(res => {
         const status = Boolean(res?.data?.registrationsOpen)
@@ -189,10 +191,10 @@ function Dashboard() {
   }
 
   const statCards = [
-    { label: 'Total Members', value: stats.totalMembers, icon: <FiUsers />, change: '+12%', accent: 'var(--cyan)', iconBg: 'rgba(0,245,255,0.08)', iconColor: 'var(--cyan)', iconBorder: 'rgba(0,245,255,0.15)' },
-    { label: 'Pending Approvals', value: stats.pendingApprovals, icon: <FiCheckSquare />, change: 'Today', accent: 'var(--gold)', iconBg: 'rgba(255,215,0,0.08)', iconColor: 'var(--gold)', iconBorder: 'rgba(255,215,0,0.15)' },
-    { label: 'Upcoming Events', value: stats.upcomingEvents, icon: <FiCalendar />, change: 'Active', accent: 'var(--green)', iconBg: 'rgba(0,255,136,0.08)', iconColor: 'var(--green)', iconBorder: 'rgba(0,255,136,0.15)' },
-    { label: 'This Month Reg.', value: stats.thisMonthReg, icon: <FiBarChart2 />, change: '+8%', accent: 'var(--pink)', iconBg: 'rgba(102,191,255,0.1)', iconColor: 'var(--pink)', iconBorder: 'rgba(102,191,255,0.2)' },
+    { label: 'Total Members', value: loadingStats ? '--' : stats.totalMembers, icon: <FiUsers />, change: '+12%', accent: 'var(--cyan)', iconBg: 'rgba(0,245,255,0.08)', iconColor: 'var(--cyan)', iconBorder: 'rgba(0,245,255,0.15)' },
+    { label: 'Pending Approvals', value: loadingStats ? '--' : stats.pendingApprovals, icon: <FiCheckSquare />, change: 'Today', accent: 'var(--gold)', iconBg: 'rgba(255,215,0,0.08)', iconColor: 'var(--gold)', iconBorder: 'rgba(255,215,0,0.15)' },
+    { label: 'Upcoming Events', value: loadingStats ? '--' : stats.upcomingEvents, icon: <FiCalendar />, change: 'Active', accent: 'var(--green)', iconBg: 'rgba(0,255,136,0.08)', iconColor: 'var(--green)', iconBorder: 'rgba(0,255,136,0.15)' },
+    { label: 'This Month Reg.', value: loadingStats ? '--' : stats.thisMonthReg, icon: <FiBarChart2 />, change: '+8%', accent: 'var(--pink)', iconBg: 'rgba(102,191,255,0.1)', iconColor: 'var(--pink)', iconBorder: 'rgba(102,191,255,0.2)' },
   ]
 
   return (
@@ -247,9 +249,9 @@ function Dashboard() {
           <h4>Quick Stats</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
             {[
-              { label: 'Total Events Hosted', val: stats.totalEvents, color: 'var(--cyan)' },
-              { label: 'Attendance Today', val: stats.attendanceToday, color: 'var(--green)' },
-              { label: 'Active Members', val: Math.round(stats.totalMembers * 0.72), color: 'var(--gold)' },
+              { label: 'Total Events Hosted', val: loadingStats ? '--' : stats.totalEvents, color: 'var(--cyan)' },
+              { label: 'Attendance Today', val: loadingStats ? '--' : stats.attendanceToday, color: 'var(--green)' },
+              { label: 'Active Members', val: loadingStats ? '--' : Math.round(stats.totalMembers * 0.72), color: 'var(--gold)' },
               { label: 'Avg. Event Attendance', val: '~68%', color: 'var(--pink)' },
             ].map(({ label, val, color }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-glass)' }}>
@@ -267,16 +269,8 @@ function Dashboard() {
 // ===========================
 // REGISTRATIONS
 // ===========================
-const MOCK_REGS = [
-  { id: 1, fullName: 'Aditya Kumar', rollNumber: '22B01A0501', branch: 'CSE', year: '3rd Year', email: 'aditya@cbit.ac.in', phone: '9876543210', status: 'pending', createdAt: '2025-08-01' },
-  { id: 2, fullName: 'Priya Reddy', rollNumber: '22B01A0423', branch: 'ECE', year: '3rd Year', email: 'priya@cbit.ac.in', phone: '9876543211', status: 'approved', createdAt: '2025-08-02' },
-  { id: 3, fullName: 'Karthik Singh', rollNumber: '23B05A0112', branch: 'IT', year: '2nd Year', email: 'karthik@cbit.ac.in', phone: '9876543212', status: 'pending', createdAt: '2025-08-03' },
-  { id: 4, fullName: 'Sneha Sharma', rollNumber: '21B01A0334', branch: 'EEE', year: '4th Year', email: 'sneha@cbit.ac.in', phone: '9876543213', status: 'approved', createdAt: '2025-08-04' },
-  { id: 5, fullName: 'Rahul Nair', rollNumber: '23B02A0567', branch: 'CSE', year: '2nd Year', email: 'rahul@cbit.ac.in', phone: '9876543214', status: 'pending', createdAt: '2025-08-05' },
-]
-
 function Registrations() {
-  const [regs, setRegs] = useState(MOCK_REGS)
+  const [regs, setRegs] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -595,19 +589,17 @@ function EventsManagement() {
 // ===========================
 // ATTENDANCE
 // ===========================
-const MOCK_ATTENDANCE = [
-  { id: 1, memberName: 'Aditya Kumar', rollNumber: '22B01A0501', eventName: 'IoT Bootcamp 2025', scannedAt: '2025-08-15T09:12:00' },
-  { id: 2, memberName: 'Priya Reddy', rollNumber: '22B01A0423', eventName: 'IoT Bootcamp 2025', scannedAt: '2025-08-15T09:18:00' },
-  { id: 3, memberName: 'Sneha Sharma', rollNumber: '21B01A0334', eventName: 'IoT Bootcamp 2025', scannedAt: '2025-08-15T09:22:00' },
-]
-
 function Attendance() {
-  const [attendance, setAttendance] = useState(MOCK_ATTENDANCE)
+  const [attendance, setAttendance] = useState([])
+  const [loading, setLoading] = useState(true)
   const [qrInput, setQrInput] = useState('')
   const [scanning, setScanning] = useState(false)
 
   useEffect(() => {
-    getAttendance().then(res => setAttendance(res.data)).catch((e) => { console.error(e); })
+    getAttendance()
+      .then(res => setAttendance(res.data))
+      .catch((e) => { console.error(e); })
+      .finally(() => setLoading(false))
   }, [])
 
   const handleScan = async (e) => {
@@ -650,35 +642,43 @@ function Attendance() {
         <div className="admin-table-header">
           <h3>Attendance Records <span style={{ color: 'var(--cyan)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>({attendance.length})</span></h3>
           <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.75rem' }} onClick={() => {
-            getAttendance().then(res => setAttendance(res.data)).catch(() => toast.error('Refresh failed'))
+            setLoading(true)
+            getAttendance()
+              .then(res => setAttendance(res.data))
+              .catch(() => toast.error('Refresh failed'))
+              .finally(() => setLoading(false))
           }}>
             <FiRefreshCw /> Refresh
           </button>
         </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Member</th>
-                <th>Roll No.</th>
-                <th>Event</th>
-                <th>Scanned At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendance.map((a, i) => (
-                <tr key={a.id}>
-                  <td className="td-mono">{i + 1}</td>
-                  <td className="td-name">{a.memberName}</td>
-                  <td className="td-mono">{a.rollNumber}</td>
-                  <td>{a.eventName}</td>
-                  <td className="td-mono">{new Date(a.scannedAt).toLocaleString('en-IN')}</td>
+        {loading ? (
+          <div className="admin-loading"><span className="spinning"><FiLoader /></span> Loading attendance...</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Member</th>
+                  <th>Roll No.</th>
+                  <th>Event</th>
+                  <th>Scanned At</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {attendance.map((a, i) => (
+                  <tr key={a.id}>
+                    <td className="td-mono">{i + 1}</td>
+                    <td className="td-name">{a.memberName}</td>
+                    <td className="td-mono">{a.rollNumber}</td>
+                    <td>{a.eventName}</td>
+                    <td className="td-mono">{new Date(a.scannedAt).toLocaleString('en-IN')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
