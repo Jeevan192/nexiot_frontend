@@ -573,17 +573,21 @@ textarea.form-input {
     padding: 112px 0 70px;
   }
 
-  .app-ambient,
-  .global-bg-particles {
-    display: none;
+  .app-ambient {
+    display: block !important;
+    width: 250px !important;
+    height: 250px !important;
+    filter: blur(40px) !important; /* Reduced blur radius to prevent mobile lag */
+    will-change: transform;
+    transform: translateZ(0); /* Hardware acceleration */
+    backface-visibility: hidden;
   }
 
-  .motion-fade-up,
-  .animate-fadeInUp,
-  .aurora-text,
-  .page-hero-bg {
-    /* Keep animations but make them very fast and non-intensive if you want, 
-       or just don't touch them so we don't break opacity: 0 states. */
+  .global-bg-particles {
+    display: block !important;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .route-page {
@@ -591,7 +595,10 @@ textarea.form-input {
   }
 
   .route-transition-overlay {
-    display: none;
+    display: block !important;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
 

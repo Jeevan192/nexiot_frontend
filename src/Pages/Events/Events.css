@@ -301,11 +301,13 @@
   }
 
   .gallery-fade {
-    display: none;
+    display: block !important;
   }
 
   .gallery-track {
-    animation: none;
+    /* Keep animation but improve perf */
+    will-change: transform;
+    transform: translateZ(0);
     width: max-content;
     padding-bottom: 4px;
   }
@@ -313,8 +315,8 @@
   .gallery-item {
     width: 260px;
     height: 190px;
-    transition: none;
-    box-shadow: none;
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   .gallery-item:hover {

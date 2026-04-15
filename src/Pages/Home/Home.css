@@ -1544,12 +1544,15 @@
   .floating-widget,
   .mission-preview-row,
   .hero-node {
-    animation: none !important;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   .hero-super-dashboard,
   .hero-mission,
   .floating-widget {
+    /* Kept backdrop-filter off to ensure no lag on cheap mobile devices */
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
@@ -1563,8 +1566,8 @@
   .faq-item,
   .cta-box,
   .impact-card {
-    box-shadow: none;
-    transition: none;
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   .hero-super-dashboard {
