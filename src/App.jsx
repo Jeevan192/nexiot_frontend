@@ -91,10 +91,13 @@ export default function App() {
     if (previousPathRef.current === pathname) return
 
     previousPathRef.current = pathname
-    setRouteTransitioning(true)
+    const startTimer = setTimeout(() => setRouteTransitioning(true), 0)
     const transitionTimer = setTimeout(() => setRouteTransitioning(false), 170)
 
-    return () => clearTimeout(transitionTimer)
+    return () => {
+      clearTimeout(startTimer)
+      clearTimeout(transitionTimer)
+    }
   }, [pathname])
 
   useEffect(() => {

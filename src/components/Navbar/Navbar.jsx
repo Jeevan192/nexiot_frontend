@@ -52,8 +52,8 @@ export default function Navbar() {
 
   useEffect(() => {
     if (menuOpen) {
-      setMenuVisible(true)
-      return undefined
+      const openTimer = setTimeout(() => setMenuVisible(true), 0)
+      return () => clearTimeout(openTimer)
     }
 
     const closeTimer = setTimeout(() => setMenuVisible(false), 220)
