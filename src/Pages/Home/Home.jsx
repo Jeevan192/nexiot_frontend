@@ -201,9 +201,20 @@ export default function Home() {
     const media = window.matchMedia('(max-width: 768px), (pointer: coarse)')
     const updateTouchState = () => setIsTouchDevice(media.matches)
     updateTouchState()
-    media.addEventListener('change', updateTouchState)
 
-    return () => media.removeEventListener('change', updateTouchState)
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', updateTouchState)
+    } else if (typeof media.addListener === 'function') {
+      media.addListener(updateTouchState)
+    }
+
+    return () => {
+      if (typeof media.removeEventListener === 'function') {
+        media.removeEventListener('change', updateTouchState)
+      } else if (typeof media.removeListener === 'function') {
+        media.removeListener(updateTouchState)
+      }
+    }
   }, [])
 
   useEffect(() => {
