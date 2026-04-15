@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { FiCalendar, FiLoader } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import EventCard from '../../components/EventCard/EventCard.jsx'
@@ -19,7 +19,7 @@ const MOCK_EVENTS = [
     registered: 250,
     capacity: 250,
     club: 'NEX-IOT',
-    icon: '🚀',
+    icon: 'ðŸš€',
     image: '/pdf-images/img_p4_1.png'
   },
   {
@@ -34,7 +34,7 @@ const MOCK_EVENTS = [
     registered: 250,
     capacity: 250,
     club: 'NEX-IOT',
-    icon: '⚡',
+    icon: 'âš¡',
     image: '/pdf-images/img_p5_1.png'
   }
 ]
@@ -53,19 +53,21 @@ export default function Events() {
     getEvents()
       .then(res => {
         // If the mock db is empty or undefined, fallback to MOCK_EVENTS
-        if (!res.data || res.data.length === 0) {
+        if (!res?.data || !Array.isArray(res.data) || res.data.length === 0) {
           setEvents(MOCK_EVENTS)
         } else {
           setEvents(res.data)
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Events fetch failed:", err);
         setEvents(MOCK_EVENTS)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = events.filter(e => {
+  const filtered = (events || []).filter(e => {
+    if (!e) return false;
     const catMatch = activeCategory === 'All' || e.category === activeCategory
     const statusMatch = activeStatus === 'All' || e.status === activeStatus
     return catMatch && statusMatch
