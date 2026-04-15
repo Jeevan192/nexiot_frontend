@@ -41,6 +41,17 @@ app.use(morgan('dev'));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'nexiot-super-secret-club-key-2024';
 
+const normalizeRole = (role) => String(role || '').toLowerCase().replace(/[_\s-]/g, '');
+
+const normalizeEvent = (eventDoc) => {
+  const raw = eventDoc?.toObject ? eventDoc.toObject() : eventDoc;
+  if (!raw) return raw;
+  return {
+    ...raw,
+    id: String(raw._id),
+  };
+};
+
 // Middleware for auth
 const protect = async (req, res, next) => {
   let token;
@@ -49,6 +60,9 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = await User.findById(decoded.id).select('-password');
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
       return next();
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, token failed' });
@@ -68,6 +82,10 @@ app.post('/api/auth/login', async (req, res) => {
     const user = await User.findOne({ username });
 
     if (user && (await user.matchPassword(password))) {
+      if (user.username === 'admin' && normalizeRole(user.role) !== 'superadmin') {
+        user.role = 'superadmin';
+        await user.save();
+      }
       const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
       res.json({ token, user: { id: user._id, name: user.username, role: user.role } });
     } else {
@@ -111,12 +129,22 @@ app.get('/api/auth/admins', protect, async (req, res) => {
 
 // Delete admin by ID
 app.delete('/api/auth/admins/:id', protect, async (req, res) => {
-  if (req.user.role !== 'superadmin') {
+  if (normalizeRole(req.user?.role) !== 'superadmin') {
     return res.status(403).json({ message: 'Forbidden. Only superadmins can delete admins.' });
   }
   try {
-    const admin = await User.findByIdAndDelete(req.params.id);
+    const admin = await User.findById(req.params.id);
     if (!admin) return res.status(404).json({ message: 'Admin not found' });
+
+    if (normalizeRole(admin.role) === 'superadmin') {
+      return res.status(403).json({ message: 'Cannot delete another superadmin account.' });
+    }
+
+    if (String(admin._id) === String(req.user._id)) {
+      return res.status(403).json({ message: 'You cannot delete your own account.' });
+    }
+
+    await admin.deleteOne();
     res.json({ message: 'Admin deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting admin' });
@@ -153,13 +181,8 @@ app.put('/api/config', protect, async (req, res) => {
 // 2. Events Configuration
 app.get('/api/events', async (req, res) => {
   try {
-    const events = await Event.find().sort({ date: 1 });
-    // Transform id mapping to front-end schema if needed
-    const formattedEvents = events.map(e => ({
-       ...e._doc, 
-       id: e.event_id, 
-       _id: e._id 
-    }));
+    const events = await Event.find().sort({ date: 1 }).lean();
+    const formattedEvents = events.map(normalizeEvent);
     res.json(formattedEvents);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching events' });
@@ -174,7 +197,7 @@ app.post('/api/events', protect, async (req, res) => {
       event_id, title, description, category, status, date, time, venue, capacity, image,
       club: club || 'NEX-IOT', icon: icon || '⚡'
     });
-    res.status(201).json(event);
+    res.status(201).json(normalizeEvent(event));
   } catch (error) {
     res.status(500).json({ message: 'Error creating event' });
   }
@@ -192,7 +215,7 @@ app.put('/api/events/:id', protect, async (req, res) => {
       { new: true }
     );
     if (!event) return res.status(404).json({ message: 'Event not found' });
-    res.json(event);
+    res.json(normalizeEvent(event));
   } catch (error) {
     res.status(500).json({ message: 'Error updating event' });
   }
@@ -222,8 +245,11 @@ app.post('/api/registrations', async (req, res) => {
       return res.status(403).json({ message: 'Registrations are globally closed' });
     }
 
-    // Check if the event exists
-    const event = await Event.findById(eventId);
+    // Check if the event exists (supports both Mongo _id and legacy event_id)
+    const eventQuery = mongoose.Types.ObjectId.isValid(eventId)
+      ? { _id: eventId }
+      : { event_id: eventId };
+    const event = await Event.findOne(eventQuery);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
     // Enforce Capacity logic
@@ -391,30 +417,34 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8080;
+const isServerlessRuntime = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
 
 // Setup initial admin if it doesn't exist or re-sync
 const seedAdmin = async () => {
     try {
         const adminExists = await User.findOne({ username: 'admin' });
         if(!adminExists) {
-            await User.create({ username: 'admin', password: 'nexiot2026', role: 'admin' });
-            console.log('Seeded default admin user: admin | nexiot2026');
+            await User.create({ username: 'admin', password: 'nexiot2026', role: 'superadmin' });
+            console.log('Seeded default superadmin user: admin | nexiot2026');
         } else {
-            // Ensure the password is correct as requested
+            // Ensure the password/role are correct as requested
             adminExists.password = 'nexiot2026';
+            adminExists.role = 'superadmin';
             await adminExists.save();
-            console.log('Admin password synchronized to nexiot2026');
+            console.log('Admin password synchronized to nexiot2026 and role promoted to superadmin');
         }
     } catch (e) {
         console.error('Seed Admin error:', e);
     }
 };
 
-connectDB().then(() => {
-  seedAdmin();
-  if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`🚀 Development Backend listening on port ${PORT}`));
-  }
-});
+if (!isServerlessRuntime) {
+  connectDB().then(() => {
+    seedAdmin();
+    if (process.env.NODE_ENV !== 'production') {
+      app.listen(PORT, () => console.log(`Development Backend listening on port ${PORT}`));
+    }
+  });
+}
 
 export default app;

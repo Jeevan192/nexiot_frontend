@@ -1,65 +1,44 @@
 ﻿import React, { useState, useEffect } from 'react'
 import { FiCalendar, FiLoader } from 'react-icons/fi'
-import toast from 'react-hot-toast'
 import EventCard from '../../components/EventCard/EventCard.jsx'
 import { getEvents } from '../../services/eventService.js'
 import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import './Events.css'
 
-const MOCK_EVENTS = [
-  {
-    id: 'ev-1',
-    title: 'NeXIoT Club Inauguration',
-    description: 'The official launch of NeXIoT Club at CBIT. An event dedicated to fostering innovation, learning, and collaboration in IoT and emerging tech.',
-    category: 'Talk',
-    status: 'completed',
-    date: '2024-11-12T10:00:00Z',
-    time: '10:00 AM - 12:00 PM',
-    venue: 'Assembly Hall, CBIT, Hyderabad',
-    registered: 250,
-    capacity: 250,
-    club: 'NEX-IOT',
-    image: '/pdf-images/img_p4_1.png'
-  },
-  {
-    id: 'ev-2',
-    title: 'Fusion Expo',
-    description: 'An exhibition showcasing 17 diverse IoT projects built by student teams tackling real-world challenges, followed by a Q&A and networking session.',
-    category: 'Project Sprint',
-    status: 'completed',
-    date: '2024-11-12T13:00:00Z',
-    time: '1:00 PM - 3:00 PM',
-    venue: 'Seminar Hall, R&E Block, CBIT',
-    registered: 250,
-    capacity: 250,
-    club: 'NEX-IOT',
-    image: '/pdf-images/img_p5_1.png'
-  }
-]
-
 const CATEGORIES = ['All', 'Workshop', 'Conference', 'Fest', 'Talk', 'Project Sprint']
 const STATUSES = ['All', 'open', 'upcoming', 'completed', 'closed']
 
 export default function Events() {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [events, setEvents] = useState(() => {
+    try {
+      const cached = localStorage.getItem('nexiot_events_cache')
+      const parsed = cached ? JSON.parse(cached) : null
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('nexiot_events_cache')
+      const parsed = cached ? JSON.parse(cached) : null
+      return !Array.isArray(parsed)
+    } catch {
+      return true
+    }
+  })
   const [activeCategory, setActiveCategory] = useState('All')
   const [activeStatus, setActiveStatus] = useState('All')
 
   useEffect(() => {
-    // In our local mock, all events are club events
     getEvents()
       .then(res => {
-        // If the mock db is empty or undefined, fallback to MOCK_EVENTS
-        if (!res?.data || !Array.isArray(res.data) || res.data.length === 0) {
-          setEvents(MOCK_EVENTS)
-        } else {
-          setEvents(res.data)
-        }
+        const freshEvents = Array.isArray(res?.data) ? res.data : []
+        setEvents(freshEvents)
+        localStorage.setItem('nexiot_events_cache', JSON.stringify(freshEvents))
       })
       .catch((err) => {
-        console.error("Events fetch failed:", err);
-        setEvents(MOCK_EVENTS)
+        console.error('Events fetch failed:', err)
       })
       .finally(() => setLoading(false))
   }, [])
@@ -79,7 +58,7 @@ export default function Events() {
           <span className="badge badge-cyan">Upcoming & Past</span>
           <h1 className="page-hero-title">Club <span>Events</span></h1>
           <p className="page-hero-sub">
-            CBIT-listed technical and campus events relevant to the NEX-IOT community. Registrations are currently closed for all listings.
+            CBIT-listed technical and campus events relevant to the NEX-IOT community. Stay updated and register based on current intake status.
           </p>
           <span className="badge badge-cyan">{CLUB_CONFIG.registrationNotice}</span>
         </div>

@@ -12,6 +12,8 @@ import Register from './Pages/Register/Register.jsx'
 import Success from './Pages/Success/Success.jsx'
 import Contact from './Pages/Contact/Contact.jsx'
 import Admin from './Pages/Admin/Admin.jsx'
+import { getConfig } from './services/eventService.js'
+import { CLUB_CONFIG } from './config/clubConfig.js'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -23,6 +25,37 @@ function ScrollToTop() {
 
 export default function App() {
   const [loading, setLoading] = useState(() => sessionStorage.getItem('nextiot_loader_seen') !== '1')
+  const [, setConfigVersion] = useState(0)
+
+  useEffect(() => {
+    const applyConfig = (registrationsOpen) => {
+      CLUB_CONFIG.registrationsOpen = Boolean(registrationsOpen)
+      CLUB_CONFIG.registrationNotice = CLUB_CONFIG.registrationsOpen
+        ? 'Registrations are currently open. Join now and secure your seat.'
+        : 'Registrations are currently closed. Please check back for the next intake window.'
+      setConfigVersion((v) => v + 1)
+    }
+
+    const syncConfig = async () => {
+      try {
+        const res = await getConfig()
+        applyConfig(res?.data?.registrationsOpen)
+      } catch {
+        // Keep last known config if API is temporarily unavailable.
+      }
+    }
+
+    syncConfig()
+    const interval = setInterval(syncConfig, 30000)
+    window.addEventListener('focus', syncConfig)
+    document.addEventListener('visibilitychange', syncConfig)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', syncConfig)
+      document.removeEventListener('visibilitychange', syncConfig)
+    }
+  }, [])
 
   useEffect(() => {
     if (!loading) return

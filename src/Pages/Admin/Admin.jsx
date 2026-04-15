@@ -12,6 +12,7 @@ import {
   getEvents, createEvent, updateEvent, deleteEvent, getDashboardStats, getAttendance, markAttendance, createAdmin,
   getConfig, updateConfig,
 } from '../../services/eventService.js'
+import { CLUB_CONFIG } from '../../config/clubConfig.js'
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar.jsx'
 import './Admin.css'
 
@@ -163,7 +164,14 @@ function Dashboard() {
       .then(res => setStats(res.data))
       .catch((e) => { console.error(e); })
     getConfig()
-      .then(res => setConfigState(res.data))
+      .then(res => {
+        const status = Boolean(res?.data?.registrationsOpen)
+        setConfigState({ registrationsOpen: status })
+        CLUB_CONFIG.registrationsOpen = status
+        CLUB_CONFIG.registrationNotice = status
+          ? 'Registrations are currently open. Join now and secure your seat.'
+          : 'Registrations are currently closed. Please check back for the next intake window.'
+      })
       .catch(e => console.error(e))
   }, [])
 
@@ -172,6 +180,10 @@ function Dashboard() {
     try {
       await updateConfig({ registrationsOpen: newStatus })
       setConfigState({ registrationsOpen: newStatus })
+      CLUB_CONFIG.registrationsOpen = newStatus
+      CLUB_CONFIG.registrationNotice = newStatus
+        ? 'Registrations are currently open. Join now and secure your seat.'
+        : 'Registrations are currently closed. Please check back for the next intake window.'
       toast.success(`Registrations ${newStatus ? 'Opened' : 'Closed'}`)
     } catch { toast.error('Failed to update config') }
   }
@@ -401,13 +413,8 @@ function EventsManagement() {
   const closeModal = () => { setShowModal(false); setEditEvent(null); setForm(EMPTY_EVENT) }
 
   useEffect(() => {
-    const onlyClubEvents = (items) => items.filter((item) => {
-      const source = `${item?.club || item?.organizer || item?.source || ''}`.toLowerCase()
-      return source.includes('nex-iot') || source.includes('nexiot') || (source.includes('nex') && source.includes('iot'))
-    })
-
     getEvents()
-      .then(res => setEvents(onlyClubEvents(res.data || [])))
+      .then(res => setEvents(res.data || []))
       .catch((e) => { console.error(e); })
       .finally(() => setLoading(false))
   }, [])
