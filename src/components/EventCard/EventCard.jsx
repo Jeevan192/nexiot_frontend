@@ -31,7 +31,6 @@ export default function EventCard({ event, onRegister }) {
           <span className={`badge ${status.cls}`} aria-label={`Status ${status.label}`}>{status.label}</span>
         </div>
 
-        <div className="event-card-icon">{event.icon || '⚡'}</div>
 
         <h3 className="event-card-title">{event.title}</h3>
         <p className="event-card-desc">{event.description}</p>

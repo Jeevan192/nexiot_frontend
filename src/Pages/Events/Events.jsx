@@ -19,7 +19,6 @@ const MOCK_EVENTS = [
     registered: 250,
     capacity: 250,
     club: 'NEX-IOT',
-    icon: 'ðŸš€',
     image: '/pdf-images/img_p4_1.png'
   },
   {
@@ -34,7 +33,6 @@ const MOCK_EVENTS = [
     registered: 250,
     capacity: 250,
     club: 'NEX-IOT',
-    icon: 'âš¡',
     image: '/pdf-images/img_p5_1.png'
   }
 ]

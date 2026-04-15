@@ -111,6 +111,9 @@ app.get('/api/auth/admins', protect, async (req, res) => {
 
 // Delete admin by ID
 app.delete('/api/auth/admins/:id', protect, async (req, res) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({ message: 'Forbidden. Only superadmins can delete admins.' });
+  }
   try {
     const admin = await User.findByIdAndDelete(req.params.id);
     if (!admin) return res.status(404).json({ message: 'Admin not found' });

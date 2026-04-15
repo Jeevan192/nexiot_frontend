@@ -9,7 +9,8 @@ import toast from 'react-hot-toast'
 import { login, isAuthenticated, getUser } from '../../services/authService.js'
 import {
   getRegistrations, approveRegistration, deleteRegistration, exportRegistrations,
-  getEvents, createEvent, updateEvent, deleteEvent, getDashboardStats, getAttendance, markAttendance, createAdmin
+  getEvents, createEvent, updateEvent, deleteEvent, getDashboardStats, getAttendance, markAttendance, createAdmin,
+  getConfig, updateConfig,
 } from '../../services/eventService.js'
 import AdminSidebar from '../../components/AdminSidebar/AdminSidebar.jsx'
 import './Admin.css'
@@ -154,13 +155,26 @@ const MOCK_CHART = [30, 45, 28, 60, 75, 52, 88, 28]
 
 function Dashboard() {
   const [stats, setStats] = useState(MOCK_STATS)
+  const [config, setConfigState] = useState({ registrationsOpen: false })
   const user = getUser()
 
   useEffect(() => {
     getDashboardStats()
       .then(res => setStats(res.data))
       .catch((e) => { console.error(e); })
+    getConfig()
+      .then(res => setConfigState(res.data))
+      .catch(e => console.error(e))
   }, [])
+
+  const handleToggleReg = async () => {
+    const newStatus = !config.registrationsOpen
+    try {
+      await updateConfig({ registrationsOpen: newStatus })
+      setConfigState({ registrationsOpen: newStatus })
+      toast.success(`Registrations ${newStatus ? 'Opened' : 'Closed'}`)
+    } catch { toast.error('Failed to update config') }
+  }
 
   const statCards = [
     { label: 'Total Members', value: stats.totalMembers, icon: <FiUsers />, change: '+12%', accent: 'var(--cyan)', iconBg: 'rgba(0,245,255,0.08)', iconColor: 'var(--cyan)', iconBorder: 'rgba(0,245,255,0.15)' },
@@ -171,13 +185,22 @@ function Dashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--text-primary)', marginBottom: 4 }}>
-          Welcome back{user?.name ? `, ${user.name}` : ''}!
-        </h2>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-secondary)', letterSpacing: '0.1em' }}>
-          // NEX-IOT ADMIN DASHBOARD · {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', color: 'var(--text-primary)', marginBottom: 4 }}>
+            Welcome back{user?.name ? `, ${user.name}` : ''}!
+          </h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-secondary)', letterSpacing: '0.1em' }}>
+            // NEX-IOT ADMIN DASHBOARD · {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        <button 
+           onClick={handleToggleReg} 
+           className={`btn ${config.registrationsOpen ? 'btn-secondary' : 'btn-primary'}`} 
+           style={{ padding: '8px 16px', fontSize: '0.75rem' }}
+        >
+          {config.registrationsOpen ? 'Close Global Registrations' : 'Open Global Registrations'}
+        </button>
       </div>
 
       <div className="stats-grid">
@@ -364,7 +387,7 @@ function Registrations() {
 // ===========================
 // EVENTS MANAGEMENT
 // ===========================
-const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', icon: '⚡', image: '' }
+const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', image: '' }
 
 const MOCK_ADMIN_EVENTS = []
 
@@ -722,6 +745,7 @@ function Contacts() {
 function AdminManagement() {
   const [admins, setAdmins] = React.useState([])
   const [loading, setLoading] = React.useState(true)
+  const user = getUser()
 
   React.useEffect(() => {
     import('../../services/eventService.js').then(s => {
@@ -754,7 +778,7 @@ function AdminManagement() {
                   <td><span className="badge badge-cyan">{a.role || 'Admin'}</span></td>
                   <td className="td-mono">{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</td>
                   <td>
-                    {a.username !== 'admin' && (
+                    {user?.role === 'superadmin' && a.username !== 'admin' && (
                       <button className="icon-btn danger" onClick={() => handleDelete(a._id)}><FiTrash2 /></button>
                     )}
                   </td>

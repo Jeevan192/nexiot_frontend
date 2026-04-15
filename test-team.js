@@ -1,1 +1,31 @@
-const team = [\n { name: 'Dasari Ishanvith', role: 'President', avatar: 'DI' },\n { name: 'P. Harini', role: 'Vice President', avatar: 'PH' },\n { name: 'Jeevan Reddy', role: 'Vice President', avatar: 'JR' },\n { name: 'Ridhima Balakrishna', role: 'General Secretary', avatar: 'RB' },\n { name: 'Ch Sai Harika', role: 'General Secretary', avatar: 'CSH' },\n { name: 'Ananth', role: 'General Secretary', avatar: 'AN' },\n { name: 'Sathvika Cheelamanthula', role: 'Joint Secretary', avatar: 'SC' },\n { name: 'Guduri Adhvika', role: 'Joint Secretary', avatar: 'GA' },\n { name: 'Manpreet Kaur', role: 'Treasurer', avatar: 'MK' },\n { name: 'M. Deekshitha', role: 'Treasurer', avatar: 'MD' },\n { name: 'Rohan Pudari', role: 'External Affairs', avatar: 'RP' },\n { name: 'Sadhika', role: 'Events Head', avatar: 'SA' },\n { name: 'Harsha', role: 'Events Head', avatar: 'HA' },\n { name: 'Abhinaya', role: 'Design Head', avatar: 'AB' },\n { name: 'Natalie Sasha', role: 'Design Head', avatar: 'NS' },\n { name: 'Manideep', role: 'Technical Head', avatar: 'MA' },\n { name: 'Manjunath', role: 'Technical Head', avatar: 'MJ' },\n { name: 'Ramya', role: 'Documentation Head', avatar: 'RA' },\n { name: 'Bhavya', role: 'Documentation Head', avatar: 'BH' },\n { name: 'Ruthwik', role: 'Sponsorship & Finance', avatar: 'RU' },\n { name: 'Vibhav', role: 'Sponsorship & Finance', avatar: 'VI' },\n { name: 'Faiz', role: 'PR Head', avatar: 'FA' },\n { name: 'Pranitha', role: 'PR Head', avatar: 'PR' },\n { name: 'Sathwik B S', role: 'Photography Head', avatar: 'SB' },\n { name: 'Shrithan', role: 'Photography Head', avatar: 'SH' },\n { name: 'Vikram', role: 'Logistics Head', avatar: 'VK' },\n { name: 'Ganesh', role: 'Logistics Head', avatar: 'GA' }\n]
+const team = [
+{ name: 'Dasari Ishanvith', role: 'President', avatar: 'DI' },
+{ name: 'P. Harini', role: 'Vice President', avatar: 'PH' },
+{ name: 'Jeevan Reddy', role: 'Vice President', avatar: 'JR' },
+{ name: 'Ridhima Balakrishna', role: 'General Secretary', avatar: 'RB' },
+{ name: 'Ch Sai Harika', role: 'General Secretary', avatar: 'CSH' },
+{ name: 'Ananth', role: 'General Secretary', avatar: 'AN' },
+{ name: 'Sathvika Cheelamanthula', role: 'Joint Secretary', avatar: 'SC' },
+{ name: 'Guduri Adhvika', role: 'Joint Secretary', avatar: 'GA' },
+{ name: 'Manpreet Kaur', role: 'Treasurer', avatar: 'MK' },
+{ name: 'M. Deekshitha', role: 'Treasurer', avatar: 'MD' },
+{ name: 'Rohan Pudari', role: 'External Affairs', avatar: 'RP' },
+{ name: 'Sadhika', role: 'Events Head', avatar: 'SA' },
+{ name: 'Harsha', role: 'Events Head', avatar: 'HA' },
+{ name: 'Abhinaya', role: 'Design Head', avatar: 'AB' },
+{ name: 'Natalie Sasha', role: 'Design Head', avatar: 'NS' },
+{ name: 'Manideep', role: 'Technical Head', avatar: 'MA' },
+{ name: 'Manjunath', role: 'Technical Head', avatar: 'MJ' },
+{ name: 'Ramya', role: 'Documentation Head', avatar: 'RA' },
+{ name: 'Bhavya', role: 'Documentation Head', avatar: 'BH' },
+{ name: 'Ruthwik', role: 'Sponsorship & Finance', avatar: 'RU' },
+{ name: 'Vibhav', role: 'Sponsorship & Finance', avatar: 'VI' },
+{ name: 'Faiz', role: 'PR Head', avatar: 'FA' },
+{ name: 'Pranitha', role: 'PR Head', avatar: 'PR' },
+{ name: 'Sathwik B S', role: 'Photography Head', avatar: 'SB' },
+{ name: 'Shrithan', role: 'Photography Head', avatar: 'SH' },
+{ name: 'Vikram', role: 'Logistics Head', avatar: 'VK' },
+{ name: 'Ganesh', role: 'Logistics Head', avatar: 'GA' }
+]
+
+
