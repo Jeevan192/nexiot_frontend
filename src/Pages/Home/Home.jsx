@@ -1,6 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useScroll, useTransform, animate, useInView } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate, useScroll, useTransform, animate, useInView, useReducedMotion } from 'framer-motion'
 import Tilt from 'react-parallax-tilt'
 import { FiArrowRight, FiGlobe, FiSearch, FiLayers, FiCpu, FiMap, FiBookOpen, FiHelpCircle, FiActivity, FiCommand, FiRadio } from 'react-icons/fi'
 import Particles, { initParticlesEngine } from "@tsparticles/react";
@@ -192,22 +192,45 @@ export default function Home() {
   const navigate = useNavigate()
   const [activeMode, setActiveMode] = useState(missionModes[0].id)
   const [init, setInit] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
+  const shouldReduceMotion = isTouchDevice || Boolean(prefersReducedMotion)
+  const pointerRafRef = useRef(0)
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px), (pointer: coarse)')
+    const updateTouchState = () => setIsTouchDevice(media.matches)
+    updateTouchState()
+    media.addEventListener('change', updateTouchState)
+
+    return () => media.removeEventListener('change', updateTouchState)
+  }, [])
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      setInit(false)
+      return undefined
+    }
+
+    let mounted = true
     initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
+      await loadSlim(engine)
     }).then(() => {
-      setInit(true);
-    });
-  }, []);
+      if (mounted) setInit(true)
+    })
+
+    return () => {
+      mounted = false
+    }
+  }, [shouldReduceMotion])
 
   const { scrollYProgress } = useScroll();
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '30%']);
   const ringScale = useTransform(scrollYProgress, [0, 1], [1, 1.5]);
 
   // Global mouse tracking for the spotlight glow
-  let mouseX = useMotionValue(0);
-  let mouseY = useMotionValue(0);
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
 
   // 3D Parallax tracking values for the hero showcase (normalized -1 to 1)
   const px = useMotionValue(0);
@@ -218,6 +241,8 @@ export default function Home() {
   const smoothPy = useMotionValue(0);
 
   useEffect(() => {
+    if (shouldReduceMotion) return undefined
+
     // Only smoothly animate the rotations so it feels weighty like a physical object
     const unsubscribeX = px.on("change", (v) => {
       smoothPx.set(smoothPx.get() + (v - smoothPx.get()) * 0.08); // Spring-like damping
@@ -240,7 +265,7 @@ export default function Home() {
       unsubscribeY();
       cancelAnimationFrame(animationFrameId);
     };
-  }, [px, py, smoothPx, smoothPy]);
+  }, [px, py, smoothPx, smoothPy, shouldReduceMotion]);
 
   const rotateX = useTransform(smoothPy, [-1, 1], [15, -15]); // Up/Down tilts X axis
   const rotateY = useTransform(smoothPx, [-1, 1], [-15, 15]); // Left/Right tilts Y axis
@@ -256,7 +281,22 @@ export default function Home() {
   const layer2X = useTransform(smoothPx, [-1, 1], [-40, 40]);
   const layer2Y = useTransform(smoothPy, [-1, 1], [-40, 40]);
 
+  useEffect(() => {
+    return () => {
+      if (pointerRafRef.current) {
+        cancelAnimationFrame(pointerRafRef.current)
+      }
+    }
+  }, [])
+
   function handleMouseMove({ currentTarget, clientX, clientY }) {
+    if (shouldReduceMotion) return
+
+    if (pointerRafRef.current) {
+      cancelAnimationFrame(pointerRafRef.current)
+    }
+
+    pointerRafRef.current = requestAnimationFrame(() => {
     // Calculate standard pixel positions for glow
     let { left, top, width, height } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
@@ -267,6 +307,7 @@ export default function Home() {
     const centerY = top + height / 2;
     px.set(Math.max(-1, Math.min(1, (clientX - centerX) / (width / 2))));
     py.set(Math.max(-1, Math.min(1, (clientY - centerY) / (height / 2))));
+    })
   }
 
   const selectedMode = useMemo(
@@ -275,15 +316,14 @@ export default function Home() {
   )
 
   const particlesOptions = useMemo(() => {
-    // Detect mobile for performance optimization
-    const isMobile = window.innerWidth <= 768;
+    const isMobile = shouldReduceMotion || window.innerWidth <= 768;
     return {
       background: { color: { value: "transparent" } },
-      fpsLimit: isMobile ? 60 : 120,
+      fpsLimit: isMobile ? 35 : 90,
       interactivity: {
         events: {
-          onClick: { enable: true, mode: "push" },
-          onHover: { enable: true, mode: "grab" },
+          onClick: { enable: !isMobile, mode: "push" },
+          onHover: { enable: !isMobile, mode: "grab" },
         },
         modes: {
           push: { quantity: isMobile ? 2 : 4 },
@@ -301,23 +341,23 @@ export default function Home() {
           speed: isMobile ? 0.8 : 1.2,
           straight: false,
         },
-        number: { density: { enable: true }, value: isMobile ? 40 : 80 },
+        number: { density: { enable: true }, value: isMobile ? 18 : 56 },
         opacity: { value: 0.4 },
         shape: { type: "circle" },
         size: { value: { min: 1, max: 2.5 } },
       },
-      detectRetina: true,
-    };
-  }, []);
+      detectRetina: !isMobile,
+    }
+  }, [shouldReduceMotion])
 
   const goRegister = () => {
     if (CLUB_CONFIG.registrationsOpen) navigate('/register')
   }
 
   return (
-    <div className="home-page" onMouseMove={handleMouseMove}>
+    <div className="home-page" onMouseMove={shouldReduceMotion ? undefined : handleMouseMove}>
       {/* GLOWING SPOTLIGHT EFFECT */}
-      <motion.div
+      {!shouldReduceMotion && <motion.div
         className="pointer-events-none fixed inset-0 z-30 transition duration-300 pointer-events-none"
         style={{
           background: useMotionTemplate`
@@ -329,10 +369,10 @@ export default function Home() {
           `,
           willChange: 'background'
         }}
-      />
+      />}
       
       {/* IoT GLOBAL NODE NETWORK BACKGROUND */}
-      {init && (
+      {!shouldReduceMotion && init && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, overflow: 'hidden' }}>
            <Particles
               id="tsparticles"
@@ -427,23 +467,25 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
                 transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
                 style={{
-                  rotateX: rotateX,
-                  rotateY: rotateY,
+                  rotateX: shouldReduceMotion ? 0 : rotateX,
+                  rotateY: shouldReduceMotion ? 0 : rotateY,
                   transformStyle: "preserve-3d",
-                  boxShadow: useTransform(
-                    [smoothPx, smoothPy],
-                    ([spx, spy]) => `${-spx * 30}px ${-spy * 30 + 40}px 80px rgba(0, 0, 0, 0.6)`
-                  )
+                  boxShadow: shouldReduceMotion
+                    ? '0 24px 60px -22px rgba(0, 0, 0, 0.6)'
+                    : useTransform(
+                      [smoothPx, smoothPy],
+                      ([spx, spy]) => `${-spx * 30}px ${-spy * 30 + 40}px 80px rgba(0, 0, 0, 0.6)`
+                    )
                 }}
               >
                 {/* Dynamic Glare Overlay */}
-                <motion.div 
+                {!shouldReduceMotion && <motion.div 
                   className="pointer-events-none absolute inset-0 z-50 rounded-[24px]"
                   style={{
                     background: useMotionTemplate`radial-gradient(ellipse at ${glareX} ${glareY}, rgba(255, 255, 255, ${glareOpacity}), transparent 60%)`,
                     mixBlendMode: 'overlay',
                   }}
-                />
+                />}
 
                 {/* Window Header */}
                 <div className="dashboard-header" style={{ transform: "translateZ(10px)" }}>
@@ -460,7 +502,7 @@ export default function Home() {
                 <div className="dashboard-bento" style={{ transformStyle: 'preserve-3d' }}>
                   
                   {/* Left Column: Live Queue & Mode Switcher */}
-                  <motion.div className="dashboard-col" style={{ transform: "translateZ(30px)", x: layer1X, y: layer1Y }}>
+                  <motion.div className="dashboard-col" style={{ transform: "translateZ(30px)", x: shouldReduceMotion ? 0 : layer1X, y: shouldReduceMotion ? 0 : layer1Y }}>
                     <div className="mission-preview">
                       <div className="mission-preview-head">
                         <span>Build Queue</span>
@@ -511,7 +553,7 @@ export default function Home() {
                   {/* Center/Right Column: Massive Code/Hardware Visualizer floating way higher */}
                   <motion.div 
                     className="dashboard-visualizer glass-panel code-block"
-                    style={{ transform: "translateZ(60px)", x: layer2X, y: layer2Y }}
+                    style={{ transform: "translateZ(60px)", x: shouldReduceMotion ? 0 : layer2X, y: shouldReduceMotion ? 0 : layer2Y }}
                   >
                     <div className="code-header">
                       <code>firmware_v0.9.cpp</code>

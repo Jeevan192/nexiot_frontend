@@ -327,6 +327,52 @@ textarea.form-input {
   isolation: isolate;
 }
 
+.route-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1040;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(180deg, rgba(1, 23, 41, 0.1), rgba(1, 23, 41, 0.08));
+  transition: opacity 160ms ease;
+}
+
+.route-transition-overlay.active {
+  opacity: 1;
+}
+
+.route-shell {
+  position: relative;
+}
+
+.route-page {
+  animation: routeFadeIn 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.route-fallback {
+  min-height: 35vh;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: routeFadeIn 220ms ease-out;
+}
+
+@keyframes routeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .global-bg {
   position: fixed;
   inset: 0;
@@ -516,6 +562,8 @@ textarea.form-input {
 
   .glass-card {
     padding: 22px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .section-subtitle {
@@ -527,9 +575,47 @@ textarea.form-input {
     padding: 112px 0 70px;
   }
 
-  .app-ambient {
-    opacity: 0.24;
-    filter: blur(90px);
+  .app-ambient,
+  .global-bg,
+  .global-bg-grid,
+  .global-bg-scan,
+  .global-bg-particles {
+    display: none;
+  }
+
+  .motion-fade-up,
+  .animate-fadeInUp,
+  .aurora-text,
+  .page-hero-bg {
+    animation: none !important;
+  }
+
+  .btn,
+  .glass-card,
+  .filter-btn,
+  .nav-links a,
+  .nav-mobile a,
+  .route-shell {
+    transition: none;
+  }
+
+  .route-page {
+    animation-duration: 210ms;
+  }
+
+  .route-transition-overlay {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-page,
+  .route-fallback {
+    animation: none !important;
+  }
+
+  .route-transition-overlay {
+    display: none;
   }
 }
 

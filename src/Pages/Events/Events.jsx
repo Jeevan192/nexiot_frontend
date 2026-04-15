@@ -7,6 +7,20 @@ import './Events.css'
 
 const CATEGORIES = ['All', 'Workshop', 'Conference', 'Fest', 'Talk', 'Project Sprint']
 const STATUSES = ['All', 'open', 'upcoming', 'ongoing', 'completed', 'closed']
+const GALLERY_ITEMS = [
+  { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugaral' },
+  { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
+  { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
+  { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
+  { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
+  { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' },
+  { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugarals' },
+  { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
+  { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
+  { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
+  { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
+  { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' },
+]
 
 export default function Events() {
   const [events, setEvents] = useState([])
@@ -90,9 +104,9 @@ export default function Events() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-secondary)' }}>
-            <div style={{ animation: 'rotate 1s linear infinite', display: 'inline-block' }}><FiLoader size={28} /></div>
-            <p style={{ marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.1em' }}>Loading events...</p>
+          <div className="events-loading-wrap">
+            <div className="events-spinner"><FiLoader size={28} /></div>
+            <p>Loading events...</p>
           </div>
         ) : loadError ? (
           <div className="events-empty">
@@ -121,86 +135,21 @@ export default function Events() {
           </div>
 
           {/* Marquee Track Container */}
-          <div className="gallery-track-container" style={{ width: '100%', overflow: 'hidden', position: 'relative', padding: '10px 0' }}>
+          <div className="gallery-track-container">
             
             {/* Soft gradient edges for smooth entry/exit */}
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '100px', background: 'linear-gradient(to right, var(--bg) 0%, transparent 100%)', zIndex: 2, pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '100px', background: 'linear-gradient(to left, var(--bg) 0%, transparent 100%)', zIndex: 2, pointerEvents: 'none' }} />
+            <div className="gallery-fade gallery-fade-left" />
+            <div className="gallery-fade gallery-fade-right" />
 
             <div className="gallery-track">
-              {/* Double array so it seamlessly loops in CSS */}
-              {[
-                { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugaral' },
-                { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
-                { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
-                { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
-                { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
-                { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' },
-                // Duplicate for infinite scroll
-                { img: '/pdf-images/img_p10_1.png', title: 'Fusion Expo Inaugarals' },
-                { img: '/pdf-images/img_p11_1.png', title: 'Club Poster Unveiling' },
-                { img: '/pdf-images/img_p11_2.png', title: 'Fusion Expo Showcase' },
-                { img: '/pdf-images/img_p12_1.png', title: 'Hardware Demonstrations' },
-                { img: '/pdf-images/img_p12_2.png', title: 'Technical Review' },
-                { img: '/pdf-images/img_p13_1.png', title: 'Pitching Ideas' }
-              ].map((item, i) => (
-                <div className="gallery-item glass-card" key={i} style={{ 
-                  flex: '0 0 auto', 
-                  width: '320px', 
-                  height: '240px', 
-                  background: `url(${item.img}) center/cover no-repeat`, 
-                  borderRadius: '12px', 
-                  border: '1px solid var(--line)', 
-                  transition: 'transform 0.4s ease, border-color 0.4s ease', 
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div className="gallery-overlay" style={{ 
-                    position: 'absolute', 
-                    inset: 0, 
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)', 
-                    display: 'flex', 
-                    alignItems: 'flex-end', 
-                    padding: '20px', 
-                    opacity: 0, 
-                    transition: 'opacity 0.3s ease' 
-                  }}>
-                    <h4 style={{ color: 'var(--cyan)', margin: 0, fontSize: '1.1rem' }}>{item.title}</h4>
+              {GALLERY_ITEMS.map((item, i) => (
+                <div className="gallery-item glass-card" key={i} style={{ backgroundImage: `url(${item.img})` }}>
+                  <div className="gallery-overlay">
+                    <h4>{item.title}</h4>
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* CSS Animation Blocks injected inline for the track */}
-            <style dangerouslySetInnerHTML={{__html: `
-              .gallery-track {
-                display: flex;
-                gap: 20px;
-                width: max-content;
-                animation: autoScroll 35s linear infinite;
-                will-change: transform;
-              }
-              .gallery-track:hover {
-                animation-play-state: paused;
-              }
-              .gallery-item {
-                transform: translateZ(0); 
-                will-change: transform, border-color, box-shadow;
-              }
-              .gallery-item:hover {
-                transform: translateY(-8px) scale(1.02) translateZ(0);
-                border-color: var(--cyan) !important;
-                z-index: 10;
-                box-shadow: 0 10px 30px rgba(0, 245, 255, 0.15);
-              }
-              .gallery-item:hover .gallery-overlay {
-                opacity: 1 !important;
-              }
-              @keyframes autoScroll {
-                0% { transform: translateX(0) translateZ(0); }
-                100% { transform: translateX(calc(-50% - 10px)) translateZ(0); } /* Scrolls exactly half the flex width */
-              }
-            `}} />
           </div>
         </div>
 

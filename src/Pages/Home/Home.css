@@ -1526,3 +1526,59 @@
     white-space: nowrap;
   }
 }
+
+@media (max-width: 768px) {
+  .hero-grid,
+  .hero-scanline,
+  .hero-orb-1,
+  .hero-orb-2,
+  .hero-rings,
+  .pulse-badge::before,
+  .feature-card::after,
+  .blueprint-grid::before,
+  .blueprint-grid::after,
+  .cta-box::after,
+  .tech-strip-inner,
+  .hero-command-panel,
+  .hero-command-panel::after,
+  .floating-widget,
+  .mission-preview-row,
+  .hero-node {
+    animation: none !important;
+  }
+
+  .hero-super-dashboard,
+  .hero-mission,
+  .floating-widget {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .hero-super-dashboard,
+  .feature-card,
+  .platform-card,
+  .pathway-card,
+  .blueprint-card,
+  .resource-card,
+  .faq-item,
+  .cta-box,
+  .impact-card {
+    box-shadow: none;
+    transition: none;
+  }
+
+  .hero-super-dashboard {
+    transform: none !important;
+  }
+
+  .impact-card:hover,
+  .feature-card:hover,
+  .pathway-card:hover,
+  .platform-card:hover,
+  .blueprint-card:hover,
+  .resource-card:hover,
+  .hero-stat:hover,
+  .event-card:hover {
+    transform: none;
+  }
+}

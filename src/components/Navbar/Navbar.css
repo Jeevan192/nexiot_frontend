@@ -122,7 +122,6 @@
 }
 
 .nav-mobile {
-  display: none;
   position: fixed;
   left: 12px;
   right: 12px;
@@ -139,11 +138,21 @@
   box-shadow: var(--shadow-main);
   max-height: calc(100vh - 96px);
   overflow-y: auto;
-  animation: mobileMenuIn 240ms ease;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 220ms ease, transform 220ms ease, visibility 220ms ease;
+}
+
+.nav-mobile.visible {
+  visibility: visible;
 }
 
 .nav-mobile.open {
-  display: block;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 .nav-mobile ul {
@@ -202,6 +211,12 @@
   .nav-links,
   .nav-cta {
     display: none;
+  }
+
+  .navbar-inner,
+  .nav-mobile {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .nav-hamburger {

@@ -1,31 +1,98 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy, Suspense, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/Navbar/Navbar.jsx'
 import Footer from './components/Footer/Footer.jsx'
 import Loader from './components/Loader/Loader.jsx'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary.jsx'
-import Home from './Pages/Home/Home.jsx'
-import About from './Pages/About/About.jsx'
-import Events from './Pages/Events/Events.jsx'
-import Register from './Pages/Register/Register.jsx'
-import Success from './Pages/Success/Success.jsx'
-import Contact from './Pages/Contact/Contact.jsx'
-import Admin from './Pages/Admin/Admin.jsx'
 import { getConfig } from './services/eventService.js'
 import { CLUB_CONFIG } from './config/clubConfig.js'
 
+const Home = lazy(() => import('./Pages/Home/Home.jsx'))
+const About = lazy(() => import('./Pages/About/About.jsx'))
+const Events = lazy(() => import('./Pages/Events/Events.jsx'))
+const Register = lazy(() => import('./Pages/Register/Register.jsx'))
+const Success = lazy(() => import('./Pages/Success/Success.jsx'))
+const Contact = lazy(() => import('./Pages/Contact/Contact.jsx'))
+const Admin = lazy(() => import('./Pages/Admin/Admin.jsx'))
+
+const preloadPages = [
+  () => import('./Pages/Home/Home.jsx'),
+  () => import('./Pages/About/About.jsx'),
+  () => import('./Pages/Events/Events.jsx'),
+  () => import('./Pages/Register/Register.jsx'),
+  () => import('./Pages/Success/Success.jsx'),
+  () => import('./Pages/Contact/Contact.jsx'),
+  () => import('./Pages/Admin/Admin.jsx'),
+]
+
 function ScrollToTop() {
   const { pathname } = useLocation()
+
   useEffect(() => {
-    window.scrollTo(0, 0)
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, left: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
   }, [pathname])
+
   return null
 }
 
 export default function App() {
+  const { pathname } = useLocation()
   const [loading, setLoading] = useState(() => sessionStorage.getItem('nextiot_loader_seen') !== '1')
+  const [routeTransitioning, setRouteTransitioning] = useState(false)
   const [, setConfigVersion] = useState(0)
+  const previousPathRef = useRef(pathname)
+
+  const routeFallback = <div className="route-fallback">Loading...</div>
+
+  useEffect(() => {
+    if (previousPathRef.current === pathname) return
+
+    previousPathRef.current = pathname
+    setRouteTransitioning(true)
+    const transitionTimer = setTimeout(() => setRouteTransitioning(false), 170)
+
+    return () => clearTimeout(transitionTimer)
+  }, [pathname])
+
+  useEffect(() => {
+    let cancelled = false
+    let warmed = false
+
+    const warmup = () => {
+      if (cancelled || warmed) return
+      warmed = true
+      preloadPages.forEach((loadPage) => {
+        loadPage().catch(() => {
+          // Ignore prefetch failures and load on-demand.
+        })
+      })
+    }
+
+    let idleId
+    const timeoutId = setTimeout(() => {
+      if ('requestIdleCallback' in window) {
+        idleId = window.requestIdleCallback(warmup, { timeout: 1600 })
+      } else {
+        warmup()
+      }
+    }, 150)
+
+    const handleFirstIntent = () => warmup()
+    window.addEventListener('pointerdown', handleFirstIntent, { once: true, passive: true })
+    window.addEventListener('keydown', handleFirstIntent, { once: true })
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+      window.removeEventListener('pointerdown', handleFirstIntent)
+      window.removeEventListener('keydown', handleFirstIntent)
+      if (idleId && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const applyConfig = (registrationsOpen) => {
@@ -45,15 +112,24 @@ export default function App() {
       }
     }
 
+    const isMobile = window.matchMedia('(max-width: 768px), (pointer: coarse)').matches
+    const pollMs = isMobile ? 120000 : 45000
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') syncConfig()
+    }
+
     syncConfig()
-    const interval = setInterval(syncConfig, 30000)
+    const interval = setInterval(syncConfig, pollMs)
     window.addEventListener('focus', syncConfig)
-    document.addEventListener('visibilitychange', syncConfig)
+    window.addEventListener('online', syncConfig)
+    document.addEventListener('visibilitychange', handleVisibility)
 
     return () => {
       clearInterval(interval)
       window.removeEventListener('focus', syncConfig)
-      document.removeEventListener('visibilitychange', syncConfig)
+      window.removeEventListener('online', syncConfig)
+      document.removeEventListener('visibilitychange', handleVisibility)
     }
   }, [])
 
@@ -72,6 +148,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      <div className={`route-transition-overlay${routeTransitioning ? ' active' : ''}`} aria-hidden="true" />
       <ScrollToTop />
       <div className="global-bg">
         <div className="global-bg-grid" />
@@ -96,22 +173,24 @@ export default function App() {
         }}
       />
       <Routes>
-        <Route path="/admin/*" element={<Admin />} />
+        <Route path="/admin/*" element={<Suspense fallback={routeFallback}><Admin /></Suspense>} />
         <Route
           path="/*"
           element={
             <ErrorBoundary>
               <Navbar />
-              <main id="main-content" tabIndex="-1">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/success" element={<Success />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
+              <main id="main-content" tabIndex="-1" className="route-shell">
+                <div key={pathname} className="route-page">
+                  <Routes>
+                    <Route path="/" element={<Suspense fallback={routeFallback}><Home /></Suspense>} />
+                    <Route path="/about" element={<Suspense fallback={routeFallback}><About /></Suspense>} />
+                    <Route path="/events" element={<Suspense fallback={routeFallback}><Events /></Suspense>} />
+                    <Route path="/register" element={<Suspense fallback={routeFallback}><Register /></Suspense>} />
+                    <Route path="/success" element={<Suspense fallback={routeFallback}><Success /></Suspense>} />
+                    <Route path="/contact" element={<Suspense fallback={routeFallback}><Contact /></Suspense>} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </div>
               </main>
               <Footer />
             </ErrorBoundary>
