@@ -12,6 +12,8 @@ const adminNav = [
   { path: '/admin/registrations', label: 'Registrations', icon: <FiUsers /> },
   { path: '/admin/events', label: 'Events', icon: <FiCalendar /> },
   { path: '/admin/attendance', label: 'Attendance', icon: <FiCheckSquare /> },
+  { path: '/admin/contacts', label: 'Queries', icon: <FiUsers /> },
+  { path: '/admin/users', label: 'Admins', icon: <FiSettings /> },
   { path: '/admin/analytics', label: 'Analytics', icon: <FiBarChart2 /> },
 ]
 

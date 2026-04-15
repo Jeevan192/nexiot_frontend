@@ -159,7 +159,7 @@ function Dashboard() {
   useEffect(() => {
     getDashboardStats()
       .then(res => setStats(res.data))
-      .catch(() => setStats(MOCK_STATS))
+      .catch((e) => { console.error(e); })
   }, [])
 
   const statCards = [
@@ -248,7 +248,7 @@ function Registrations() {
   useEffect(() => {
     getRegistrations()
       .then(res => setRegs(res.data))
-      .catch(() => setRegs(MOCK_REGS))
+      .catch((e) => { console.error(e); })
       .finally(() => setLoading(false))
   }, [])
 
@@ -364,7 +364,7 @@ function Registrations() {
 // ===========================
 // EVENTS MANAGEMENT
 // ===========================
-const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', icon: '⚡' }
+const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', icon: '⚡', image: '' }
 
 const MOCK_ADMIN_EVENTS = []
 
@@ -385,7 +385,7 @@ function EventsManagement() {
 
     getEvents()
       .then(res => setEvents(onlyClubEvents(res.data || [])))
-      .catch(() => setEvents(MOCK_ADMIN_EVENTS))
+      .catch((e) => { console.error(e); })
       .finally(() => setLoading(false))
   }, [])
 
@@ -541,8 +541,10 @@ function EventsManagement() {
                   <label className="form-label">Capacity</label>
                   <input className="form-input" type="number" value={form.capacity} onChange={fset('capacity')} min={1} />
                 </div>
-              </div>
-              <div className="form-group">
+              </div>                <div className="form-group">
+                  <label className="form-label">Image URL</label>
+                  <input className="form-input" value={form.image || ''} onChange={fset('image')} placeholder="/pdf-images/img.png or https://..." />
+                </div>              <div className="form-group">
                 <label className="form-label">Description</label>
                 <textarea className="form-input" value={form.description} onChange={fset('description')} rows={3} placeholder="Event description..." />
               </div>
@@ -575,7 +577,7 @@ function Attendance() {
   const [scanning, setScanning] = useState(false)
 
   useEffect(() => {
-    getAttendance().then(res => setAttendance(res.data)).catch(() => setAttendance(MOCK_ATTENDANCE))
+    getAttendance().then(res => setAttendance(res.data)).catch((e) => { console.error(e); })
   }, [])
 
   const handleScan = async (e) => {
@@ -655,6 +657,117 @@ function Attendance() {
 // ===========================
 // PROTECTED LAYOUT
 // ===========================
+
+function Contacts() {
+  const [queries, setQueries] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    import('../../services/eventService.js').then(s => {
+      s.getContacts().then(res => setQueries(res.data)).catch(e => console.error(e)).finally(() => setLoading(false))
+    })
+  }, [])
+
+  const handleResolve = async (id) => {
+    try {
+      const s = await import('../../services/eventService.js');
+      await s.resolveContact(id)
+      setQueries(queries.map(q => q._id === id ? { ...q, isResolved: true } : q))
+      toast.success('Query marked as resolved!')
+    } catch { toast.error('Failed to resolve') }
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this query?')) return;
+    try {
+      const s = await import('../../services/eventService.js');
+      await s.deleteContact(id)
+      setQueries(queries.filter(q => q._id !== id))
+      toast.success('Deleted successfully')
+    } catch { toast.error('Failed to delete') }
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Contact Queries</h2>
+      <div className="glass-card table-container">
+        {loading ? <p>Loading...</p> : (
+          <table className="admin-table">
+            <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {queries.map(q => (
+                <tr key={q._id}>
+                  <td className="td-mono">{new Date(q.createdAt).toLocaleDateString()}</td>
+                  <td>{q.name}</td>
+                  <td>{q.email}</td>
+                  <td style={{maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden'}}>{q.subject} - {q.message}</td>
+                  <td><span className={`badge ${q.isResolved ? 'badge-green' : 'badge-pink'}`}>{q.isResolved ? 'Resolved' : 'Pending'}</span></td>
+                  <td>
+                    <div className="table-actions">
+                      {!q.isResolved && <button className="icon-btn" onClick={() => handleResolve(q._id)}><span style={{color: 'green'}}>Ok</span></button>}
+                      <button className="icon-btn danger" onClick={() => handleDelete(q._id)}><FiTrash2 /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {queries.length === 0 && <tr><td colSpan="6" style={{textAlign: 'center'}}>No queries found</td></tr>}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AdminManagement() {
+  const [admins, setAdmins] = React.useState([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    import('../../services/eventService.js').then(s => {
+      s.getAdmins().then(res => setAdmins(res.data)).catch(e => console.error(e)).finally(() => setLoading(false))
+    })
+  }, [])
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Revoke access for this admin?')) return;
+    try {
+      const s = await import('../../services/eventService.js');
+      await s.deleteAdmin(id)
+      setAdmins(admins.filter(a => a._id !== id))
+      toast.success('Admin removed')
+    } catch { toast.error('Failed to remove admin') }
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: '1.3rem', marginBottom: '1rem' }}>Admin Roles & Access</h2>
+      <div className="glass-card table-container">
+        {loading ? <p>Loading...</p> : (
+          <table className="admin-table">
+            <thead><tr><th>#</th><th>Username</th><th>Role</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody>
+              {admins.map((a, i) => (
+                <tr key={a._id}>
+                  <td className="td-mono">{i+1}</td>
+                  <td>{a.username}</td>
+                  <td><span className="badge badge-cyan">{a.role || 'Admin'}</span></td>
+                  <td className="td-mono">{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : 'N/A'}</td>
+                  <td>
+                    {a.username !== 'admin' && (
+                      <button className="icon-btn danger" onClick={() => handleDelete(a._id)}><FiTrash2 /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function AdminProtected() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -673,6 +786,7 @@ function AdminProtected() {
 
   // Close mobile sidebar automatically on navigation
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false)
   }, [location.pathname])
 
@@ -709,7 +823,9 @@ function AdminProtected() {
             <Route path="events" element={<EventsManagement />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="analytics" element={<Dashboard />} />
-            <Route path="*" element={<Navigate to="dashboard" />} />
+              <Route path="contacts" element={<Contacts />} />
+              <Route path="users" element={<AdminManagement />} />
+              <Route path="*" element={<Navigate to="dashboard" />} />
           </Routes>
         </div>
       </div>

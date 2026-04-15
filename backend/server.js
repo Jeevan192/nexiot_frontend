@@ -13,7 +13,13 @@ import Registration from './models/Registration.js';
 import Contact from './models/Contact.js';
 import Config from './models/Config.js';
 
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -171,12 +177,14 @@ app.post('/api/events', protect, async (req, res) => {
   }
 });
 
-// Update event by ID
+  // Update event by ID
 app.put('/api/events/:id', protect, async (req, res) => {
   try {
     const { title, description, category, status, date, time, venue, capacity, image, icon } = req.body;
-    const event = await Event.findByIdAndUpdate(
-      req.params.id,
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    const query = isObjectId ? { _id: req.params.id } : { event_id: req.params.id };
+    const event = await Event.findOneAndUpdate(
+      query,
       { title, description, category, status, date, time, venue, capacity, image, icon },
       { new: true }
     );
@@ -190,7 +198,9 @@ app.put('/api/events/:id', protect, async (req, res) => {
 // Delete event by ID
 app.delete('/api/events/:id', protect, async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+    const query = isObjectId ? { _id: req.params.id } : { event_id: req.params.id };
+    const event = await Event.findOneAndDelete(query);
     if (!event) return res.status(404).json({ message: 'Event not found' });
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
