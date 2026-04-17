@@ -393,7 +393,7 @@ function Registrations() {
 // ===========================
 // EVENTS MANAGEMENT
 // ===========================
-const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', image: '' }
+const EMPTY_EVENT = { title: '', description: '', category: 'Workshop', date: '', time: '', venue: '', capacity: 100, status: 'upcoming', image: '', gallery: [] }
 
 const MOCK_ADMIN_EVENTS = []
 
@@ -594,7 +594,7 @@ function EventsManagement() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">External Registration Link</label>
+                  <label className="form-label">Event Gallery Pictures</label><div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}><input type="file" accept="image/*" multiple onChange={(e) => { const files = Array.from(e.target.files); if(!files.length) return; Promise.all(files.map(file => { return new Promise((resolve) => { if(file.size > 5 * 1024 * 1024) { alert(`Picture ${file.name} too large! Max 5MB.`); resolve(null); return; } const reader = new FileReader(); reader.onloadend = () => resolve(reader.result); reader.readAsDataURL(file); }) })).then(results => { const validImgs = results.filter(r => r !== null); setForm(f => ({ ...f, gallery: [...(f.gallery || []), ...validImgs] })) }) }} style={{ fontSize: '0.8rem', flex: 1 }} />{(form.gallery || []).map((img, i) => (<div key={i} style={{ position: 'relative' }}><img src={img} alt={`Gallery ${i}`} style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-glass)' }} /><button type="button" onClick={() => setForm(f => ({ ...f, gallery: f.gallery.filter((_, index) => index !== i) }))} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 15, height: 15, fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button></div>))}</div></div><div className="form-group"><label className="form-label">External Registration Link</label>
                   <input className="form-input" value={form.external_link || ''} onChange={fset('external_link')} placeholder="https://..." />
                 </div>
               </div>
@@ -905,3 +905,5 @@ export default function Admin() {
     </Routes>
   )
 }
+
+

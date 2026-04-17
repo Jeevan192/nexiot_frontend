@@ -85,11 +85,13 @@
   background:
     radial-gradient(65% 60% at 45% 44%, rgba(126, 215, 255, 0.16), rgba(126, 215, 255, 0.02) 72%),
     radial-gradient(60% 58% at 70% 38%, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 74%);
-  filter: blur(2px);
-  animation: heroHaloFloat 18s ease-in-out infinite;
-}
+    animation: heroHaloFloat 18s ease-in-out infinite;
+  }
 
-.hero-content {
+  @media (min-width: 769px) {
+    .hero-rings {
+      filter: blur(2px);
+    }
   position: relative;
   z-index: 1;
   max-width: 800px;

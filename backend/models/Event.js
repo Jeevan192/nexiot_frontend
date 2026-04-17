@@ -14,6 +14,7 @@ const eventSchema = new mongoose.Schema({
   club: { type: String, required: true },
   icon: { type: String },
   image: { type: String },
+  gallery: [{ type: String }],
   external_link: { type: String }
 }, { timestamps: true });
 

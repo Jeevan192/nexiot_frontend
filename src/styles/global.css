@@ -37,7 +37,13 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Removed smooth scroll for mobile, added below for desktop */
+}
+
+@media (min-width: 769px) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 body {

@@ -344,7 +344,7 @@ export default function Home() {
     const isMobile = isTouchDevice || window.innerWidth <= 768;
     return {
       background: { color: { value: "transparent" } },
-      fpsLimit: isMobile ? 30 : 90,
+      fpsLimit: isMobile ? 60 : 90,
       interactivity: {
         events: {
           onClick: { enable: !isMobile, mode: "push" },
@@ -357,16 +357,16 @@ export default function Home() {
       },
       particles: {
         color: { value: "#00f5ff" },
-        links: { color: "#00f5ff", distance: isMobile ? 80 : 150, enable: true, opacity: isMobile ? 0.1 : 0.2, width: 1 },
+        links: { color: "#00f5ff", distance: isMobile ? 80 : 150, enable: !isMobile, opacity: isMobile ? 0.1 : 0.2, width: 1 },
         move: {
           direction: "none",
           enable: true,
           outModes: { default: "bounce" },
           random: false,
-          speed: isMobile ? 0.5 : 1.2,
+          speed: isMobile ? 0 : 1.2,
           straight: false,
         },
-        number: { density: { enable: true }, value: isMobile ? 15 : 56 },
+        number: { density: { enable: true }, value: isMobile ? 0 : 56 },
         opacity: { value: isMobile ? 0.3 : 0.4 },
         shape: { type: "circle" },
         size: { value: { min: 1, max: 2.5 } },
