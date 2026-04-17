@@ -565,10 +565,40 @@ function EventsManagement() {
                   <label className="form-label">Capacity</label>
                   <input className="form-input" type="number" value={form.capacity} onChange={fset('capacity')} min={1} />
                 </div>
-              </div>                <div className="form-group">
-                  <label className="form-label">Image URL</label>
-                  <input className="form-input" value={form.image || ''} onChange={fset('image')} placeholder="/pdf-images/img.png or https://..." />
-                </div>              <div className="form-group">
+              </div>
+              <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="form-group">
+                  <label className="form-label">Event Poster / Picture</label>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => {
+                        const file = e.target.files[0]
+                        if(!file) return;
+                        if(file.size > 5 * 1024 * 1024) {
+                          alert('Picture too large! Max 5MB.');
+                          return;
+                        }
+                        const reader = new FileReader()
+                        reader.onloadend = () => {
+                          setForm(f => ({ ...f, image: reader.result }))
+                        }
+                        reader.readAsDataURL(file)
+                      }} 
+                      style={{ fontSize: '0.8rem', flex: 1 }} 
+                    />
+                    {form.image && (
+                      <img src={form.image} alt="Preview" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-glass)' }} />
+                    )}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">External Registration Link</label>
+                  <input className="form-input" value={form.external_link || ''} onChange={fset('external_link')} placeholder="https://..." />
+                </div>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Description</label>
                 <textarea className="form-input" value={form.description} onChange={fset('description')} rows={3} placeholder="Event description..." />
               </div>

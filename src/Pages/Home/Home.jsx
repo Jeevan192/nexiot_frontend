@@ -194,7 +194,7 @@ export default function Home() {
   const [init, setInit] = useState(false)
   const [isTouchDevice, setIsTouchDevice] = useState(false)
   const prefersReducedMotion = useReducedMotion()
-  const shouldReduceMotion = isTouchDevice || Boolean(prefersReducedMotion)
+  const shouldReduceMotion = Boolean(prefersReducedMotion)
   const pointerRafRef = useRef(0)
 
   useEffect(() => {
@@ -302,24 +302,36 @@ export default function Home() {
     }
   }, [])
 
-  function handleMouseMove({ currentTarget, clientX, clientY }) {
+  function handlePointerMove(e) {
     if (shouldReduceMotion) return
+
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const currentTarget = e.currentTarget;
 
     if (pointerRafRef.current) {
       cancelAnimationFrame(pointerRafRef.current)
     }
 
     pointerRafRef.current = requestAnimationFrame(() => {
-    // Calculate standard pixel positions for glow
-    let { left, top, width, height } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
+      if (!currentTarget) return;
+      let { left, top, width, height } = currentTarget.getBoundingClientRect();
+      mouseX.set(clientX - left);
+      mouseY.set(clientY - top);
 
-    // Calculate normalized (-1 to 1) values for 3D showcase
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
-    px.set(Math.max(-1, Math.min(1, (clientX - centerX) / (width / 2))));
-    py.set(Math.max(-1, Math.min(1, (clientY - centerY) / (height / 2))));
+      // Add a damping factor for mobile to make it less chaotic
+      const damp = isTouchDevice ? 2.5 : 1;
+      const centerX = left + width / 2;
+      const centerY = top + height / 2;
+      px.set(Math.max(-1, Math.min(1, ((clientX - centerX) / (width / 2)) / damp)));
+      py.set(Math.max(-1, Math.min(1, ((clientY - centerY) / (height / 2)) / damp)));
     })
   }
 
@@ -329,10 +341,10 @@ export default function Home() {
   )
 
   const particlesOptions = useMemo(() => {
-    const isMobile = shouldReduceMotion || window.innerWidth <= 768;
+    const isMobile = isTouchDevice || window.innerWidth <= 768;
     return {
       background: { color: { value: "transparent" } },
-      fpsLimit: isMobile ? 35 : 90,
+      fpsLimit: isMobile ? 30 : 90,
       interactivity: {
         events: {
           onClick: { enable: !isMobile, mode: "push" },
@@ -345,23 +357,23 @@ export default function Home() {
       },
       particles: {
         color: { value: "#00f5ff" },
-        links: { color: "#00f5ff", distance: isMobile ? 100 : 150, enable: true, opacity: 0.2, width: 1 },
+        links: { color: "#00f5ff", distance: isMobile ? 80 : 150, enable: true, opacity: isMobile ? 0.1 : 0.2, width: 1 },
         move: {
           direction: "none",
           enable: true,
           outModes: { default: "bounce" },
           random: false,
-          speed: isMobile ? 0.8 : 1.2,
+          speed: isMobile ? 0.5 : 1.2,
           straight: false,
         },
-        number: { density: { enable: true }, value: isMobile ? 18 : 56 },
-        opacity: { value: 0.4 },
+        number: { density: { enable: true }, value: isMobile ? 15 : 56 },
+        opacity: { value: isMobile ? 0.3 : 0.4 },
         shape: { type: "circle" },
         size: { value: { min: 1, max: 2.5 } },
       },
       detectRetina: !isMobile,
     }
-  }, [shouldReduceMotion])
+  }, [isTouchDevice, shouldReduceMotion])
 
   const pointerGlowBackground = useMotionTemplate`
     radial-gradient(
@@ -383,7 +395,7 @@ export default function Home() {
   }
 
   return (
-    <div className="home-page" onMouseMove={shouldReduceMotion ? undefined : handleMouseMove}>
+    <div className="home-page" onPointerMove={shouldReduceMotion ? undefined : handlePointerMove} onTouchMove={shouldReduceMotion ? undefined : handlePointerMove}>
       {/* GLOWING SPOTLIGHT EFFECT */}
       {!shouldReduceMotion && <motion.div
         className="pointer-events-none fixed inset-0 z-30 transition duration-300 pointer-events-none"

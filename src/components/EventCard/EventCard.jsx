@@ -13,17 +13,19 @@ const statusConfig = {
 export default function EventCard({ event, onRegister }) {
   const navigate = useNavigate()
   const status = statusConfig[event.status] || statusConfig.upcoming
-  const canRegister = CLUB_CONFIG.registrationsOpen
+  const isUpcomingOrOpen = ['upcoming', 'open'].includes(event.status)
+  const canRegister = Boolean(event.external_link) && isUpcomingOrOpen
 
   const handleRegister = () => {
-    if (onRegister) onRegister(event)
-    else navigate('/register')
+    if (event.external_link) {
+      window.open(event.external_link, '_blank', 'noopener,noreferrer')
+    }
   }
 
   return (
     <div className="event-card glass-card" style={{ padding: '0px', overflow: 'hidden' }}>
       {event.image && (
-        <div style={{ height: '140px', width: '100%', background: `url(${event.image}) center/cover no-repeat`, backgroundPosition: 'center', borderBottom: '1px solid var(--line)' }} />
+        <div style={{ height: '180px', width: '100%', background: `url(${event.image}) center/cover no-repeat`, backgroundPosition: 'center', borderBottom: '1px solid var(--line)' }} />
       )}
       <div style={{ padding: '24px' }}>
         <div className="event-card-header">
@@ -64,11 +66,11 @@ export default function EventCard({ event, onRegister }) {
         <div className="event-card-footer">
           {canRegister ? (
             <button className="btn btn-primary" onClick={handleRegister} aria-label={`Register for ${event.title}`}>
-              Join Club <FiArrowRight />
+              Register for Event <FiArrowRight />
             </button>
           ) : (
             <button className="btn btn-secondary" disabled>
-              Registrations Closed
+              {['closed', 'completed'].includes(event.status) ? 'Event Completed/Closed' : 'No Registration Available'}
             </button>
           )}
         </div>

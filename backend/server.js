@@ -228,10 +228,10 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', protect, async (req, res) => {
   try {
-    const { title, description, category, status, date, time, venue, capacity, image, club, icon } = req.body;
+    const { title, description, category, status, date, time, venue, capacity, image, external_link, club, icon } = req.body;
     const event_id = 'ev-' + Date.now();
     const event = await Event.create({
-      event_id, title, description, category, status, date, time, venue, capacity, image,
+      event_id, title, description, category, status, date, time, venue, capacity, image, external_link,
       club: club || 'NEX-IOT', icon: icon || '⚡'
     });
     res.status(201).json(normalizeEvent(event));
@@ -243,12 +243,12 @@ app.post('/api/events', protect, async (req, res) => {
   // Update event by ID
 app.put('/api/events/:id', protect, async (req, res) => {
   try {
-    const { title, description, category, status, date, time, venue, capacity, image, icon } = req.body;
+    const { title, description, category, status, date, time, venue, capacity, image, external_link, icon } = req.body;
     const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
     const query = isObjectId ? { _id: req.params.id } : { event_id: req.params.id };
     const event = await Event.findOneAndUpdate(
       query,
-      { title, description, category, status, date, time, venue, capacity, image, icon },
+      { title, description, category, status, date, time, venue, capacity, image, external_link, icon },
       { new: true }
     );
     if (!event) return res.status(404).json({ message: 'Event not found' });

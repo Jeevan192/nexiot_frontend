@@ -13,7 +13,8 @@ const eventSchema = new mongoose.Schema({
   capacity: { type: Number, default: 100 },
   club: { type: String, required: true },
   icon: { type: String },
-  image: { type: String }
+  image: { type: String },
+  external_link: { type: String }
 }, { timestamps: true });
 
 const Event = mongoose.model('Event', eventSchema);
